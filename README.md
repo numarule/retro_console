@@ -10,13 +10,6 @@ Spartan 3an development board for now
 
 
 ## What are we doing *right now*?
-- Ensure our software/hardware setup is kosher
-- Relearn enough verilog to produce a switch/led test
-- Synthesize
-- Load bitstream onto board
-- Profit
-
-
 ### Current steps
 - [X] Install required proprietary xilinx software
 - [X] Drag out old fpga hardware
@@ -28,9 +21,10 @@ Spartan 3an development board for now
   - [*CURRENT*] Synchronous
 - [X] First Synthesize
 - [X] Load board
+- [X] Multiple switch->led bus
+- [X] Synchronous assignment of registers
 
-- [ ] Multiple switch->led bus
-- [ ] Play with registers
+- [ ] Try cascading counters to generate vga like signals
 
 ### Next steps
 - [ ] Basic VGA Output

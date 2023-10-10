@@ -9,11 +9,19 @@
 // Revision 0.01 - File Created
 //////////////////////////////////////////////////////////////////////////////////
 module top(
-    input [3:0] switches,
-    output [3:0] leds
+  input clock,
+  input [3:0] switches,
+  output [3:0] leds,
+  output reg [3:0] leds2
 );
 
-assign leds = switches;
+assign leds[3:0] = switches;
 
+always @(posedge clock) begin
+  leds2[0] <= !switches[0];
+  leds2[1] <= !switches[1];
+  leds2[2] <= !switches[2];
+  leds2[3] <= !switches[3];
+end
 
 endmodule
