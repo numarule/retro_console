@@ -18,13 +18,21 @@ Spartan 3an development board for now
 - [X] New test project
 - [X] Wire up switch to led
   - [X] Combinational
-  - [*CURRENT*] Synchronous
+  - [X] Synchronous
 - [X] First Synthesize
 - [X] Load board
 - [X] Multiple switch->led bus
 - [X] Synchronous assignment of registers
 
-- [ ] Try cascading counters to generate vga like signals
+- [*CURRENT?*] Try cascading counters to generate vga like signals
+- [X] Look up vga signals
+- [X] Choose a base resolution
+  - [X] 640x480x60hz (25.125Mhz ideal, we'll try @ 25 even for simplicity)
+  - [ ] Inc Registers
+    - [ ] Horz position & sync
+    - [ ] Vert position & sync
+    - [ ] RGB values 4 bits each, 12 bit color 4096 total colors
+- [ ] VGA
 
 ### Next steps
 - [ ] Basic VGA Output
@@ -42,6 +50,8 @@ Spartan 3an development board for now
 - [ ] Classic retro controllers
 
 ### Misc TODO
+- [ ] Find saleae logic analyzer
+  - [ ] Install software and ensure works
 - [ ] Reduce ise text size
   - Possible causes
     - LG4k being set as primary?
