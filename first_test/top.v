@@ -38,6 +38,9 @@ localparam HORIZONTAL_BACK_PORCH   = 48;
 localparam HORIZONTAL_SYNC_WIDTH   = 96;
 localparam HORIZONTAL_TOTAL = HORIZONTAL_FRONT_PORCH +
   HORIZONTAL_VISIBLE_AREA + HORIZONTAL_BACK_PORCH + HORIZONTAL_SYNC_WIDTH; //TODO Assert == 800
+localparam HORIZONTAL_MAX = HORIZONTAL_TOTAL - 1;
+
+localparam HORIZONTAL_ACTIVE_POLARITY = 1'b0;
 
 localparam VERTICAL_FRONT_PORCH  = 10;
 localparam VERTICAL_VISIBLE_AREA = 480;
@@ -45,6 +48,9 @@ localparam VERTICAL_BACK_PORCH   = 29;
 localparam VERTICAL_SYNC_WIDTH   = 2;
 localparam VERTICAL_TOTAL = VERTICAL_FRONT_PORCH +
   VERTICAL_VISIBLE_AREA + VERTICAL_BACK_PORCH + VERTICAL_SYNC_WIDTH; //TODO Assert == 525
+localparam VERTICAL_MAX = VERTICAL_TOTAL - 1;
+
+localparam VERTICAL_ACTIVE_POLARITY = 1'b0;
 
 //TODO Evaluate macro vs locaparam for constants
 //jlocalparam GRAPHICS_WIDTH  = HORIZONTAL_VISIBLE_AREA;
@@ -61,57 +67,51 @@ localparam VERTICAL_SYNC_START = VERTICAL_FRONT_PORCH +
   VERTICAL_VISIBLE_AREA + VERTICAL_BACK_PORCH;
 localparam VERTICAL_SYNC_END = VERTICAL_SYNC_START + VERTICAL_SYNC_WIDTH;
 
+
 reg [HORIZONTAL_REGISTER_WIDTH:0] horizontal_position;
 reg [VERTICAL_REGISTER_WIDTH:0]   vertical_position;
 
 // Horz
-always @(posedge clk_25m) begin
-  if (horizontal_position >= HORIZONTAL_TOTAL-1) begin
-    horizontal_position = 0;
-  end else begin
-    horizontal_position = horizontal_position + 1;
-  end
-end
+wire horizontal_reset;
+assign horizontal_reset = horizontal_position >= HORIZONTAL_MAX;
 
-always @(posedge clk_25m) begin
-  if (horizontal_position >= HORIZONTAL_SYNC_START &&
-    horizontal_position <= HORIZONTAL_SYNC_END) begin
-    //Inside sync
-    vga_horizontal_sync <= 1'b0; //TODO Replace magic
-  end else begin
-    vga_horizontal_sync <= 1'b1;
-  end
-end
+always @(posedge clk_25m) horizontal_position <=
+  horizontal_reset ? 0 : horizontal_position + 1;
+
+wire horizontal_sync;
+assign horizontal_sync = horizontal_position >= HORIZONTAL_SYNC_START &&
+    horizontal_position <= HORIZONTAL_SYNC_END;
+
+always @(posedge clk_25m) vga_horizontal_sync =
+  horizontal_sync ? HORIZONTAL_ACTIVE_POLARITY : ~HORIZONTAL_ACTIVE_POLARITY;
 
 // Vert
-always @(posedge clk_25m) begin
-  if (vertical_position >= VERTICAL_TOTAL-1) begin
-    vertical_position = 0;
-  end else begin
-    if (horizontal_position == HORIZONTAL_TOTAL-1) begin
-      vertical_position = vertical_position + 1;
-    end
-  end
-end
+wire vertical_reset;
+assign vertical_reset = vertical_position >= VERTICAL_MAX;
+
+wire horizontal_at_max;
+assign horizontal_at_max = horizontal_position == HORIZONTAL_MAX;
 
 always @(posedge clk_25m) begin
-  if (vertical_position >= VERTICAL_SYNC_START &&
-    vertical_position <= VERTICAL_SYNC_END) begin
-    //Inside sync
-    vga_vertical_sync <= 1'b0;
-  end else begin
-    vga_vertical_sync <= 1'b1;
-  end
+  casez({vertical_reset, horizontal_at_max})
+    2'b1?: vertical_position = 0;
+    2'b00: vertical_position = vertical_position;
+    2'b01: vertical_position = vertical_position + 1;
+  endcase
 end
 
+wire vertical_sync;
+assign vertical_sync = vertical_position >= VERTICAL_SYNC_START &&
+    vertical_position <= VERTICAL_SYNC_END;
+
+always @(posedge clk_25m) vga_vertical_sync <= vertical_sync ? VERTICAL_ACTIVE_POLARITY : ~VERTICAL_ACTIVE_POLARITY;
 
 // Debug
 wire led7;
 
 // Solid RED!
 // TODO Only on in visible area
-HERE
-assign vga_r[3:0] = 4'b0000;
+assign vga_r[3:0] = 4'b0110;
 assign vga_g[3:0] = 4'b1111;
 assign vga_b[3:0] = 4'b1111;
 
@@ -136,8 +136,8 @@ DCM_SP #(
 always @(posedge clk_25m) begin
   leds[0] <= vga_vertical_sync;
   leds[1] <= vga_horizontal_sync;
-  leds[2] <= !switches[2];
-  leds[3] <= !switches[3];
+  leds[2] <= switches[2];
+  leds[3] <= switches[3];
 
   leds[6:4] <= leds[2:0];
 end

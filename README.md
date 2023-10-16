@@ -10,6 +10,17 @@ Spartan 3an development board for now
 
 
 ## What are we doing *right now*?
+# Early stream Setup
+- [X] Cleanup from last stream
+  - [X] Add git commits
+  - [X] Check checklists
+  - [X] Boomark, link, and close tabs
+
+
+
+
+
+
 ### Current steps
 - [X] Install required proprietary xilinx software
 - [X] Drag out old fpga hardware
@@ -24,21 +35,22 @@ Spartan 3an development board for now
 - [X] Multiple switch->led bus
 - [X] Synchronous assignment of registers
 
-- [*CURRENT?*] Try cascading counters to generate vga like signals
+- [o] Try cascading counters to generate vga like signals
 - [X] Look up vga signals
 - [X] Choose a base resolution
   - [X] 640x480x60hz (25.125Mhz ideal, we'll try @ 25 even for simplicity)
-  - [ ] Inc Registers
-    - [ ] Horz position & sync
-    - [ ] Vert position & sync
-    - [ ] RGB values 4 bits each, 12 bit color 4096 total colors
+  - [o] Inc Registers
+    - [o] Horz position & sync
+    - [o] Vert position & sync
+    - [o] RGB values 4 bits each, 12 bit color 4096 total colors
 - [ ] VGA
 
 ### Next steps
 - [ ] Basic VGA Output
-  - [ ] Solid color @ resolution
-  - [ ] Check capture with vga->hdmi, mira & obs
-  - [ ] Pattern based on pixel position
+  - [X] 640x480x60hz (25.125Mhz ideal, we'll try @ 25 even for simplicity)
+  - [*CURRENT*] Solid color @ resolution
+- [ ] Check capture with vga->hdmi, mira & obs
+- [ ] Pattern based on pixel position
 - [ ] Pong
 - [ ] Simple limited lines/vectors/shapes
 - [ ] Tilemap system
