@@ -6,12 +6,6 @@ Spartan 3an development board for now, also have a zedboard with a Zynq
 
 
 ## What are we doing *right now*?
-# Early stream Setup
-- [o] Cleanup from last stream
-  - [X] Add git commits
-  - [X] Check checklists
-  - [ ] Boomark, link, and close tabs
-
 ### Current steps
 - [o] Try cascading counters to generate vga like signals
 - [X] Look up vga signals
@@ -21,10 +15,9 @@ Spartan 3an development board for now, also have a zedboard with a Zynq
     - [o] Horz position & sync
     - [o] Vert position & sync
     - [o] RGB values 4 bits each, 12 bit color 4096 total colors
-- [ ] VGA
 
 ### Next steps
-- [ ] Basic VGA Output
+- [X] Basic VGA Output
   - [X] 640x480x60hz (25.125Mhz ideal, we'll try @ 25 even for simplicity)
   - [X] Solid color @ resolution
 - [ ] Separate vga into own module
@@ -38,6 +31,7 @@ Spartan 3an development board for now, also have a zedboard with a Zynq
     - [ ] Vsync
     - [ ] Sync signals?
 - [ ] Pattern based on pixel position
+  - [ ] Test pattern
 - [ ] Pong
 - [ ] Check capture with vga->hdmi, mira & obs
 - [ ] Simple limited lines/vectors/shapes
@@ -48,8 +42,6 @@ Spartan 3an development board for now, also have a zedboard with a Zynq
 
 - [ ] Custom controllers
 - [ ] Classic retro controllers
-
-
 
 ### Done
 - [X] Install required proprietary xilinx software
@@ -78,3 +70,11 @@ Spartan 3an development board for now, also have a zedboard with a Zynq
     - LG4k being set as primary?
     - Qt4?
     - Java?
+
+
+### Early stream Setup
+- [o] Cleanup from last stream
+  - [X] Add git commits
+  - [X] Check checklists
+  - [X] Boomark, link, and close tabs
+
