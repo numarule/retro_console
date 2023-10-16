@@ -13,7 +13,7 @@ module top(
    input clk_50m
   ,input [3:0] switches
   ,output reg [7:0] leds
-  ,output clk_25m //TODO Rename to pixel clock?
+  ,output clk_pixel
 
   ,output reg vga_horizontal_sync
   ,output reg vga_vertical_sync
@@ -32,104 +32,94 @@ module top(
 // 16          - 640          - 48         - 96   - 800
 // Front Porch - Visible Area - Back Porch - Sync - Total
 // 10          - 480          - 33         - 2    - 525
-localparam HORIZONTAL_FRONT_PORCH  = 16;
-localparam HORIZONTAL_VISIBLE_AREA = 640;
-localparam HORIZONTAL_BACK_PORCH   = 48;
-localparam HORIZONTAL_SYNC_WIDTH   = 96;
-localparam HORIZONTAL_TOTAL = HORIZONTAL_FRONT_PORCH +
-  HORIZONTAL_VISIBLE_AREA + HORIZONTAL_BACK_PORCH + HORIZONTAL_SYNC_WIDTH; //TODO Assert == 800
-localparam HORIZONTAL_MAX = HORIZONTAL_TOTAL - 1;
+localparam H_FRONT_PORCH  = 16;
+localparam H_VISIBLE_AREA = 640;
+localparam H_BACK_PORCH   = 48;
+localparam H_SYNC_WIDTH   = 96;
+localparam H_TOTAL = H_FRONT_PORCH + H_VISIBLE_AREA + H_BACK_PORCH + H_SYNC_WIDTH; //TODO Assert == 800
+localparam H_MAX = H_TOTAL - 1;
 
-localparam HORIZONTAL_ACTIVE_POLARITY = 1'b0;
+localparam H_ACTIVE_POLARITY = 1'b0;
 
-localparam VERTICAL_FRONT_PORCH  = 10;
-localparam VERTICAL_VISIBLE_AREA = 480;
-localparam VERTICAL_BACK_PORCH   = 29;
-localparam VERTICAL_SYNC_WIDTH   = 2;
-localparam VERTICAL_TOTAL = VERTICAL_FRONT_PORCH +
-  VERTICAL_VISIBLE_AREA + VERTICAL_BACK_PORCH + VERTICAL_SYNC_WIDTH; //TODO Assert == 525
-localparam VERTICAL_MAX = VERTICAL_TOTAL - 1;
+localparam V_FRONT_PORCH  = 10;
+localparam V_VISIBLE_AREA = 480;
+localparam V_BACK_PORCH   = 29;
+localparam V_SYNC_WIDTH   = 2;
+localparam V_TOTAL = V_FRONT_PORCH + V_VISIBLE_AREA + V_BACK_PORCH + V_SYNC_WIDTH; //TODO Assert == 525
+localparam V_MAX = V_TOTAL - 1;
 
-localparam VERTICAL_ACTIVE_POLARITY = 1'b0;
+localparam V_ACTIVE_POLARITY = 1'b0;
 
-//TODO Evaluate macro vs locaparam for constants
-//jlocalparam GRAPHICS_WIDTH  = HORIZONTAL_VISIBLE_AREA;
-//jlocalparam GRAPHICS_HEIGHT = VERTICAL_VISIBLE_AREA;
+localparam H_REG_WIDTH = 11; //TODO log2(H_VISIBLE_AREA)
+localparam V_REG_WIDTH = 11; //TODO log2(V_VISIBLE_AREA)
 
-localparam HORIZONTAL_REGISTER_WIDTH = 11; //TODO log2(HORIZONTAL_VISIBLE_AREA)
-localparam VERTICAL_REGISTER_WIDTH   = 11; //TODO log2(VERTICAL_VISIBLE_AREA)
+localparam H_SYNC_START = H_FRONT_PORCH +
+  H_VISIBLE_AREA + H_BACK_PORCH;
+localparam H_SYNC_END = H_SYNC_START + H_SYNC_WIDTH;
 
-localparam HORIZONTAL_SYNC_START = HORIZONTAL_FRONT_PORCH +
-  HORIZONTAL_VISIBLE_AREA + HORIZONTAL_BACK_PORCH;
-localparam HORIZONTAL_SYNC_END = HORIZONTAL_SYNC_START + HORIZONTAL_SYNC_WIDTH;
+localparam V_SYNC_START = V_FRONT_PORCH +
+  V_VISIBLE_AREA + V_BACK_PORCH;
+localparam V_SYNC_END = V_SYNC_START + V_SYNC_WIDTH;
 
-localparam VERTICAL_SYNC_START = VERTICAL_FRONT_PORCH +
-  VERTICAL_VISIBLE_AREA + VERTICAL_BACK_PORCH;
-localparam VERTICAL_SYNC_END = VERTICAL_SYNC_START + VERTICAL_SYNC_WIDTH;
+// 25 Mhz Pixel Clock
+wire dcm_fb;
+DCM_SP #(
+   .CLKDV_DIVIDE(2)
+  ,.CLK_FEEDBACK("1X")
+) DCM_SP_inst (
+   .CLKIN(clk_50m)
+  ,.CLKDV(clk_pixel)
+  ,.CLK0(dcm_fb)
+  ,.CLKFB(dcm_fb) //TODO Learn what would be best/appropriate here
+);
 
+reg [H_REG_WIDTH:0] h_position;
+reg [V_REG_WIDTH:0] v_position;
 
-reg [HORIZONTAL_REGISTER_WIDTH:0] horizontal_position;
-reg [VERTICAL_REGISTER_WIDTH:0]   vertical_position;
+// H
+wire h_reset = h_position >= H_MAX;
+always @(posedge clk_pixel) h_position <= h_reset ? 0 : h_position + 1;
 
-// Horz
-wire horizontal_reset;
-assign horizontal_reset = horizontal_position >= HORIZONTAL_MAX;
-always @(posedge clk_25m) horizontal_position <=
-  horizontal_reset ? 0 : horizontal_position + 1;
+wire h_sync = h_position >= H_SYNC_START && h_position <= H_SYNC_END;
+always @(posedge clk_pixel) vga_horizontal_sync <=
+  h_sync ? H_ACTIVE_POLARITY : ~H_ACTIVE_POLARITY; //OPT Could this ternary be an operation?
 
-wire horizontal_sync;
-assign horizontal_sync = horizontal_position >= HORIZONTAL_SYNC_START &&
-    horizontal_position <= HORIZONTAL_SYNC_END;
-always @(posedge clk_25m) vga_horizontal_sync =
-  horizontal_sync ? HORIZONTAL_ACTIVE_POLARITY : ~HORIZONTAL_ACTIVE_POLARITY;
+// V
+wire v_reset = v_position >= V_MAX;
 
-// Vert
-wire vertical_reset;
-assign vertical_reset = vertical_position >= VERTICAL_MAX;
+wire h_at_max;
+assign h_at_max = h_position == H_MAX;
 
-wire horizontal_at_max;
-assign horizontal_at_max = horizontal_position == HORIZONTAL_MAX;
-
-always @(posedge clk_25m) begin
-  casez({vertical_reset, horizontal_at_max})
-    2'b1?: vertical_position = 0;
-    2'b00: vertical_position = vertical_position;
-    2'b01: vertical_position = vertical_position + 1;
+always @(posedge clk_pixel) begin
+  casez({v_reset, h_at_max})
+    2'b1?: v_position = 0;
+    2'b00: v_position = v_position; //NOP
+    2'b01: v_position = v_position + 1;
   endcase
 end
 
-wire vertical_sync;
-assign vertical_sync = vertical_position >= VERTICAL_SYNC_START &&
-    vertical_position <= VERTICAL_SYNC_END;
-always @(posedge clk_25m) vga_vertical_sync <=
-  vertical_sync ? VERTICAL_ACTIVE_POLARITY : ~VERTICAL_ACTIVE_POLARITY;
+wire v_sync;
+assign v_sync = v_position >= V_SYNC_START && v_position <= V_SYNC_END;
+always @(posedge clk_pixel) vga_vertical_sync <=
+  v_sync ? V_ACTIVE_POLARITY : ~V_ACTIVE_POLARITY;
 
 
-localparam HORIZONTAL_VISIBLE_AREA_START = HORIZONTAL_FRONT_PORCH;
-localparam HORIZONTAL_VISIBLE_AREA_END = HORIZONTAL_FRONT_PORCH + HORIZONTAL_VISIBLE_AREA;
-wire in_horizontal_visibile_area;
-assign in_horizontal_visibile_area = horizontal_position >= HORIZONTAL_VISIBLE_AREA_START &&
-  horizontal_position < HORIZONTAL_VISIBLE_AREA_END;
+localparam H_VISIBLE_AREA_START = H_FRONT_PORCH;
+localparam H_VISIBLE_AREA_END = H_FRONT_PORCH + H_VISIBLE_AREA;
+wire in_h_visibile_area = h_position >= H_VISIBLE_AREA_START &&
+  h_position < H_VISIBLE_AREA_END;
 
-localparam VERTICAL_VISIBLE_AREA_START = VERTICAL_FRONT_PORCH;
-localparam VERTICAL_VISIBLE_AREA_END = VERTICAL_FRONT_PORCH + VERTICAL_VISIBLE_AREA;
-wire in_vertical_visibile_area;
-assign in_vertical_visibile_area = horizontal_position >= VERTICAL_VISIBLE_AREA_START &&
-  horizontal_position < VERTICAL_VISIBLE_AREA_END;
+localparam V_VISIBLE_AREA_START = V_FRONT_PORCH;
+localparam V_VISIBLE_AREA_END = V_FRONT_PORCH + V_VISIBLE_AREA;
+wire in_v_visibile_area = h_position >= V_VISIBLE_AREA_START &&
+  h_position < V_VISIBLE_AREA_END;
 
 wire in_visible_area;
-assign in_visible_area = in_horizontal_visibile_area && in_vertical_visibile_area;
+assign in_visible_area = in_h_visibile_area && in_v_visibile_area;
 
 // Debug
-wire led7;
 
-// Solid RED!
-// TODO Only on in visible area
-/*
-assign vga_r[3:0] = 4'b1111;
-assign vga_g[3:0] = 4'b0000;
-assign vga_b[3:0] = 4'b1111;
-*/
+// Solid MAGENTA!
 always @* begin
   if(in_visible_area) begin
     vga_r[3:0] <= 4'b1111;
@@ -142,25 +132,11 @@ always @* begin
   end
 end
 
-assign rx_n = vga_horizontal_sync;
-assign rx_p = vga_vertical_sync;
-
-wire dcm_fb;
-
-// 25 Mhz
-DCM_SP #(
-    //TODO Memo: This is actually performed before entry into DCM, best?
-   .CLKDV_DIVIDE(2)
-  ,.CLK_FEEDBACK("1X")
-) DCM_SP_inst (
-   .CLKIN(clk_50m)
-  ,.CLKDV(clk_25m)
-  ,.CLK0(dcm_fb)
-  ,.CLKFB(dcm_fb) //TODO Learn what would be best/appropriate here
-);
+assign rx_n = vga_vertical_sync;
+assign rx_p = vga_horizontal_sync;
 
 // Debug Test with switches and leds
-always @(posedge clk_25m) begin
+always @(posedge clk_pixel) begin
   leds[0] <= vga_vertical_sync;
   leds[1] <= vga_horizontal_sync;
   leds[2] <= switches[2];
@@ -169,9 +145,10 @@ always @(posedge clk_25m) begin
   leds[6:4] <= leds[2:0];
 end
 
-always @(posedge clk_25m) begin
-  leds[7] <= vertical_position == 0;
+always @(posedge clk_pixel) begin
+  leds[7] <= v_position == 0;
 end
-assign led7 = leds[7];
+
+wire led7 = leds[7];
 
 endmodule
