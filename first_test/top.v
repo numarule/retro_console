@@ -18,9 +18,9 @@ module top(
   ,output reg vga_horizontal_sync
   ,output reg vga_vertical_sync
 
-  ,output [3:0] vga_r
-  ,output [3:0] vga_g
-  ,output [3:0] vga_b
+  ,output reg [3:0] vga_r
+  ,output reg [3:0] vga_g
+  ,output reg [3:0] vga_b
 
   ,output rx_n
   ,output rx_p
@@ -74,14 +74,12 @@ reg [VERTICAL_REGISTER_WIDTH:0]   vertical_position;
 // Horz
 wire horizontal_reset;
 assign horizontal_reset = horizontal_position >= HORIZONTAL_MAX;
-
 always @(posedge clk_25m) horizontal_position <=
   horizontal_reset ? 0 : horizontal_position + 1;
 
 wire horizontal_sync;
 assign horizontal_sync = horizontal_position >= HORIZONTAL_SYNC_START &&
     horizontal_position <= HORIZONTAL_SYNC_END;
-
 always @(posedge clk_25m) vga_horizontal_sync =
   horizontal_sync ? HORIZONTAL_ACTIVE_POLARITY : ~HORIZONTAL_ACTIVE_POLARITY;
 
@@ -103,17 +101,46 @@ end
 wire vertical_sync;
 assign vertical_sync = vertical_position >= VERTICAL_SYNC_START &&
     vertical_position <= VERTICAL_SYNC_END;
+always @(posedge clk_25m) vga_vertical_sync <=
+  vertical_sync ? VERTICAL_ACTIVE_POLARITY : ~VERTICAL_ACTIVE_POLARITY;
 
-always @(posedge clk_25m) vga_vertical_sync <= vertical_sync ? VERTICAL_ACTIVE_POLARITY : ~VERTICAL_ACTIVE_POLARITY;
+
+localparam HORIZONTAL_VISIBLE_AREA_START = HORIZONTAL_FRONT_PORCH;
+localparam HORIZONTAL_VISIBLE_AREA_END = HORIZONTAL_FRONT_PORCH + HORIZONTAL_VISIBLE_AREA;
+wire in_horizontal_visibile_area;
+assign in_horizontal_visibile_area = horizontal_position >= HORIZONTAL_VISIBLE_AREA_START &&
+  horizontal_position < HORIZONTAL_VISIBLE_AREA_END;
+
+localparam VERTICAL_VISIBLE_AREA_START = VERTICAL_FRONT_PORCH;
+localparam VERTICAL_VISIBLE_AREA_END = VERTICAL_FRONT_PORCH + VERTICAL_VISIBLE_AREA;
+wire in_vertical_visibile_area;
+assign in_vertical_visibile_area = horizontal_position >= VERTICAL_VISIBLE_AREA_START &&
+  horizontal_position < VERTICAL_VISIBLE_AREA_END;
+
+wire in_visible_area;
+assign in_visible_area = in_horizontal_visibile_area && in_vertical_visibile_area;
 
 // Debug
 wire led7;
 
 // Solid RED!
 // TODO Only on in visible area
-assign vga_r[3:0] = 4'b0110;
-assign vga_g[3:0] = 4'b1111;
+/*
+assign vga_r[3:0] = 4'b1111;
+assign vga_g[3:0] = 4'b0000;
 assign vga_b[3:0] = 4'b1111;
+*/
+always @* begin
+  if(in_visible_area) begin
+    vga_r[3:0] <= 4'b1111;
+    vga_g[3:0] <= 4'b0000;
+    vga_b[3:0] <= 4'b1111;
+  end else begin
+    vga_r[3:0] <= 4'b0000;
+    vga_g[3:0] <= 4'b0000;
+    vga_b[3:0] <= 4'b0000;
+  end
+end
 
 assign rx_n = vga_horizontal_sync;
 assign rx_p = vga_vertical_sync;
