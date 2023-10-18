@@ -7,29 +7,12 @@ Spartan 3an development board for now, also have a zedboard with a Zynq
 
 ## What are we doing *right now*?
 ### Current steps
-- [o] Try cascading counters to generate vga like signals
-- [X] Look up vga signals
-- [X] Choose a base resolution
-  - [X] 640x480x60hz (25.125Mhz ideal, we'll try @ 25 even for simplicity)
-  - [o] Inc Registers
-    - [o] Horz position & sync
-    - [o] Vert position & sync
-    - [o] RGB values 4 bits each, 12 bit color 4096 total colors
+
+- [ ] Try 640x480@60hz border with vga only cable (no hdmi conversion)
+- [ ] Try 1280x800 to determine if border is due to display mismatch
+
 
 ### Next steps
-- [X] Basic VGA Output
-  - [X] 640x480x60hz (25.125Mhz ideal, we'll try @ 25 even for simplicity)
-  - [X] Solid color @ resolution
-- [ ] Separate vga into own module
-  - [ ] Parameters
-    - [ ] Resolution and freq
-  - [ ] Inputs
-    - [ ] Current pixel color
-    - [ ] Pixel clock
-  - [ ] Outputs
-    - [ ] Current pixel location
-    - [ ] Vsync
-    - [ ] Sync signals?
 - [ ] Pattern based on pixel position
   - [ ] Test pattern
 - [ ] Pong
@@ -56,6 +39,27 @@ Spartan 3an development board for now, also have a zedboard with a Zynq
 - [X] Load board
 - [X] Multiple switch->led bus
 - [X] Synchronous assignment of registers
+- [X] Try cascading counters to generate vga like signals
+- [X] Look up vga signals
+- [X] Choose a base resolution
+  - [X] 640x480x60hz (25.125Mhz ideal, we'll try @ 25 even for simplicity)
+  - [X] Inc Registers
+    - [X] Horz position & sync
+    - [X] Vert position & sync
+    - [X] RGB values 4 bits each, 12 bit color 4096 total colors
+- [X] Basic VGA Output
+  - [X] 640x480x60hz (25.125Mhz ideal, we'll try @ 25 even for simplicity)
+  - [X] Solid color @ resolution
+- [X] Separate vga into own module
+  - [X] Parameters
+    - [X] Resolution and freq
+  - [X] Inputs
+    - [X] Current pixel color
+    - [X] Pixel clock
+  - [X] Outputs
+    - [X] Current pixel location
+    - [X] Vsync
+    - [X] Sync signals
 
 
 
@@ -78,3 +82,7 @@ Spartan 3an development board for now, also have a zedboard with a Zynq
   - [X] Check checklists
   - [X] Boomark, link, and close tabs
 
+
+### Random thoughts
+- Vga module should just be for timing
+  - Colors will always be passthrough

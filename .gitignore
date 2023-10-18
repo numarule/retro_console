@@ -1,6 +1,8 @@
 *
 !.gitignore
-!**/*.v
-!**/*.md
-!**/*.ucf
-!scripts/*
+!scripts/
+!scripts/*.bash
+!first_test/
+!*.v
+!*.md
+!*.ucf
