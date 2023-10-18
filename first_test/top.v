@@ -119,7 +119,7 @@ always @(posedge clk_pixel) begin
 //  if(visible_area && (on_border || led)) begin
 //  if(visible_area && (led)) begin
 //  if(visible_area && on_border) begin
-  if(visible_area) begin
+  if(on_border) begin
     r <= 4'b0000;
     g <= 4'b1111;
     b <= 4'b1111;
