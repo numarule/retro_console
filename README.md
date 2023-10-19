@@ -6,9 +6,9 @@ Spartan 3an development board for now, also have a zedboard with a Zynq
 
 ## What are we doing *right now*?
 ### Next steps
-- [ ] Rewrite vga module to have active area in lowest portion of address
-  - [ ] Active Area - Front Porch - Sync - Back Porch
-  - [ ] Test with 640x480@60hz (vga)
+- [X] Rewrite vga module to have active area in lowest portion of address
+  - [X] Active Area - Front Porch - Sync - Back Porch
+  - [X] Test with 640x480@60hz (vga)
   - [ ] Test with 1280x800@60hz (native for our screen?)
 - [o] Pattern based on pixel position
   - [o] Border
