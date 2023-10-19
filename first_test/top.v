@@ -21,91 +21,72 @@ module top(
   ,output vga_vertical_sync
 
   ,output led
+
+  //TODO DEBUG
+  ,output tx_n
+  ,output tx_p
 );
 
 // 25 Mhz Pixel Clock for 640x480x60hz
-//wire dcm_fb;
-wire clk_pixel;
+wire pixel_clock;
 DCM_SP #(
-  //.CLKDV_DIVIDE(2)
    .CLKFX_MULTIPLY(2)
   ,.CLKFX_DIVIDE(4)
-  //,.CLK_FEEDBACK("1X")
   //,.CLKIN_PERIOD(20.0)
-  //,.STARTUP_WAIT("FALSE")
 
-  //,.CLKIN_DIVIDE_BY_2("FALSE")
-  //,.CLKDV_DIVIDE(2.0)
-  //,.CLKOUT_PHASE_SHIFT("NONE")
-  //,.DUTY_CYCLE_CORRECTION("FALSE")
-  //,.PHASE_SHIFT(0)
 ) DCM_SP_inst (
    .CLKIN(clk_50m)
-  ,.CLKFX(clk_pixel)
-  //,.CLK0(dcm_fb)
-  //,.CLKFB(dcm_fb) //TODO Learn what would be best/appropriate here
-
-//  ,.DSSEN(0)
-//  ,.PSCLK(0)
-//  ,.PSEN(0)
+  ,.CLKFX(pixel_clock)
   ,.RST(0)
 );
 
-wire [11:0] h_position;
-wire [11:0] v_position;
+// TODO Source elsewhere with log2(ceil())
+localparam POSITION_REG_MAX = 11;
+localparam COLOR_BIT_DEPTH = 4;
+localparam COLOR_BIT_MAX = COLOR_BIT_DEPTH-1;
 
-wire [11:0] h_active_position;
-wire [11:0] v_active_position;
+wire [POSITION_REG_MAX:0] h_position;
+wire [POSITION_REG_MAX:0] v_position;
+
+wire [POSITION_REG_MAX:0] h_active_position;
+wire [POSITION_REG_MAX:0] v_active_position;
 
 wire visible_area;
-reg [3:0] r;
-reg [3:0] g;
-reg [3:0] b;
+reg [COLOR_BIT_MAX:0] r;
+reg [COLOR_BIT_MAX:0] g;
+reg [COLOR_BIT_MAX:0] b;
 
+//localparam GRAPHICS_WIDTH  = 1024; //TODO Link
+//localparam GRAPHICS_HEIGHT =  768; //TODO Link
+localparam GRAPHICS_WIDTH  = 640; //TODO Link
+localparam GRAPHICS_HEIGHT =  480; //TODO Link
 vga #(
-  /*
-   .H_FRONT_PORCH(16)
-  ,.H_VISIBLE_AREA(640)
-  ,.H_BACK_PORCH(48)
-  ,.H_SYNC_WIDTH(96)
-  ,.H_ACTIVE_POLARITY(1'b0)
+//   .H_FRONT_PORCH(160)
+//  ,.H_VISIBLE_AREA(GRAPHICS_WIDTH)
+//  ,.H_BACK_PORCH(24)
+//  ,.H_SYNC_WIDTH(136)
+//  ,.H_ACTIVE_POLARITY(1'b0)
+//
+//  ,.V_FRONT_PORCH(29)
+//  ,.V_VISIBLE_AREA(GRAPHICS_HEIGHT)
+//  ,.V_BACK_PORCH(3)
+//  ,.V_SYNC_WIDTH(6)
+//  ,.V_ACTIVE_POLARITY(1'b1)
 
-  ,.V_FRONT_PORCH(10)
-  ,.V_VISIBLE_AREA(480)
-  ,.V_BACK_PORCH(29)
-  ,.V_SYNC_WIDTH(2)
-  ,.V_ACTIVE_POLARITY(1'b0)
-
-  //TODO log2(ceil(H_VISIBLE_AREA))
-  ,.H_REG_WIDTH(11)
-  //TODO log2(ceil(V_VISIBLE_AREA))
-  ,.V_REG_WIDTH(11)
-  */
+//  ,.H_REG_MAX(POSITION_REG_MAX)
+//  ,.V_REG_MAX(POSITION_REG_MAX)
 ) vga_inst (
-   .clk_pixel(clk_pixel)
+   .pixel_clock(pixel_clock)
 
-  // Solid CYAN!
-  ,.in_vga_r(r)
-  ,.in_vga_g(g)
-  ,.in_vga_b(b)
+  ,.vga_horizontal_sync(vga_horizontal_sync)
+  ,.vga_vertical_sync(vga_vertical_sync)
 
-  ,.out_vga_horizontal_sync(vga_horizontal_sync)
-  ,.out_vga_vertical_sync(vga_vertical_sync)
+  ,.h_position(h_position)
+  ,.v_position(v_position)
 
-  ,.out_visible_area(visible_area)
-  ,.out_vga_r(vga_r)
-  ,.out_vga_g(vga_g)
-  ,.out_vga_b(vga_b)
-
-  ,.out_h_position(h_position)
-  ,.out_v_position(v_position)
-
-  ,.out_h_active_position(h_active_position)
-  ,.out_v_active_position(v_active_position)
+  ,.visible_area(visible_area)
 );
 
-localparam GRAPHICS_WIDTH  = 640; //TODO Link
-localparam GRAPHICS_HEIGHT = 480; //TODO Link
 localparam BORDER_WIDTH = 100;
 wire on_h_border = h_position < BORDER_WIDTH ||
   (h_position + BORDER_WIDTH) > GRAPHICS_WIDTH;
@@ -115,13 +96,13 @@ wire on_border = on_h_border || on_v_border;
 
 //wire test_h = h_active_position > 330;
 
-always @(posedge clk_pixel) begin
+always @(posedge pixel_clock) begin
 //  if(visible_area && (on_border || led)) begin
 //  if(visible_area && (led)) begin
 //  if(visible_area && on_border) begin
   if(on_border) begin
-    r <= 4'b0000;
-    g <= 4'b1111;
+    r <= 4'b1111;
+    g <= 4'b0000;
     b <= 4'b1111;
   end else begin
     r <= 4'b0000;
@@ -130,6 +111,16 @@ always @(posedge clk_pixel) begin
   end
 end
 
+localparam COLOR_POLARITY = 1'b1;
+
+assign vga_r = visible_area ? r : 0;
+assign vga_g = visible_area ? g : 0;
+assign vga_b = visible_area ? b : 0;
+
+//TODO DEBUG
 assign led = h_active_position == v_active_position;
+
+assign tx_n = vga_horizontal_sync;
+assign tx_p = vga_vertical_sync;
 
 endmodule

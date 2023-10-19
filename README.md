@@ -4,17 +4,16 @@ Designing our own *retro console* from _scratch_ in verilog/fpga
 ### FPGA Hardware
 Spartan 3an development board for now, also have a zedboard with a Zynq
 
-
 ## What are we doing *right now*?
-### Current steps
-
-- [ ] Try 640x480@60hz border with vga only cable (no hdmi conversion)
-- [ ] Try 1280x800 to determine if border is due to display mismatch
-
-
 ### Next steps
-- [ ] Pattern based on pixel position
+- [ ] Rewrite vga module to have active area in lowest portion of address
+  - [ ] Active Area - Front Porch - Sync - Back Porch
+  - [ ] Test with 640x480@60hz (vga)
+  - [ ] Test with 1280x800@60hz (native for our screen?)
+- [o] Pattern based on pixel position
+  - [o] Border
   - [ ] Test pattern
+- [ ] Abstract timings and resolutions into predefined table of choices
 - [ ] Pong
 - [ ] Check capture with vga->hdmi, mira & obs
 - [ ] Simple limited lines/vectors/shapes
@@ -25,6 +24,8 @@ Spartan 3an development board for now, also have a zedboard with a Zynq
 
 - [ ] Custom controllers
 - [ ] Classic retro controllers
+
+
 
 ### Done
 - [X] Install required proprietary xilinx software
@@ -75,14 +76,17 @@ Spartan 3an development board for now, also have a zedboard with a Zynq
     - Qt4?
     - Java?
 
+### Random Notes
+- percent diff = [|(a-b)|/(a+b)/2] × 100
 
-### Early stream Setup
-- [o] Cleanup from last stream
+### Random thoughts
+- Vga module should just be for timing
+  - Colors will always be passthrough
+
+### Early stream Setup - 10 Min
+- [X] Cleanup from last stream
   - [X] Add git commits
   - [X] Check checklists
   - [X] Boomark, link, and close tabs
 
 
-### Random thoughts
-- Vga module should just be for timing
-  - Colors will always be passthrough
