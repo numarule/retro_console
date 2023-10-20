@@ -42,10 +42,7 @@ DCM_SP #(
 );
 // TODO Source elsewhere with log2(ceil())
 localparam POSITION_REG_MAX = 11;
-localparam R_BIT_DEPTH = 4;
-localparam G_BIT_DEPTH = 4;
-localparam B_BIT_DEPTH = 4;
-localparam COLOR_BIT_DEPTH = R_BIT_DEPTH + G_BIT_DEPTH + B_BIT_DEPTH;
+localparam COLOR_BIT_DEPTH = 4;
 localparam COLOR_BIT_MAX = COLOR_BIT_DEPTH-1;
 
 wire [POSITION_REG_MAX:0] h_position;
@@ -55,11 +52,9 @@ wire [POSITION_REG_MAX:0] h_active_position;
 wire [POSITION_REG_MAX:0] v_active_position;
 
 wire visible_area;
-
-//`define RED_BITS   11:8
-//`define GREEN_BITS 7:4
-//`define BLUE_BITS  3:0
-reg [COLOR_BIT_MAX:0] rgb12;
+reg [COLOR_BIT_MAX:0] r;
+reg [COLOR_BIT_MAX:0] g;
+reg [COLOR_BIT_MAX:0] b;
 
 localparam GRAPHICS_WIDTH  = 1280; //TODO Link
 localparam GRAPHICS_HEIGHT =  800; //TODO Link
@@ -91,11 +86,6 @@ vga #(
 
   ,.visible_area(visible_area)
 );
-localparam COLOR_POLARITY = 1'b1;
-
-assign vga_r = visible_area ? rgb12[11:8]: 0;
-assign vga_g = visible_area ? rgb12[7:4] : 0;
-assign vga_b = visible_area ? rgb12[3:0] : 0;
 
 localparam BORDER_WIDTH = 100;
 wire on_h_border = h_position < BORDER_WIDTH ||
@@ -104,18 +94,24 @@ wire on_v_border = v_position < BORDER_WIDTH ||
   (v_position + BORDER_WIDTH) > GRAPHICS_HEIGHT;
 wire on_border = on_h_border || on_v_border;
 
+//wire test_h = h_active_position > 330;
+
 always @(posedge pixel_clock) begin
   if(on_border) begin
-    //rgb12 <= 12'h03_00_03;
-    rgb12[11:8]   <= 4'h03;
-    rgb12[7:4] <= 4'h00;
-    rgb12[3:0]  <= 4'h03;
+    r <= 4'b0011;
+    g <= 4'b0000;
+    b <= 4'b0011;
   end else begin
-    rgb12 <= 12'h00_00_00;
-    //rgb12[11:8]   <= 4'h00;
-    //rgb12[7:4] <= 4'h00;
-    //rgb12[3:0]  <= 4'h00;
+    r <= 4'b0000;
+    g <= 4'b0000;
+    b <= 4'b0000;
   end
 end
+
+localparam COLOR_POLARITY = 1'b1;
+
+assign vga_r = visible_area ? r : 0;
+assign vga_g = visible_area ? g : 0;
+assign vga_b = visible_area ? b : 0;
 
 endmodule

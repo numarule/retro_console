@@ -5,11 +5,19 @@ Designing our own *retro console* from _scratch_ in verilog/fpga
 Spartan 3an development board for now, also have a zedboard with a Zynq
 
 ## What are we doing *right now*?
+- [ ] Define paddle
+  - Size - w, h
+  - Position - x
+  - Speed - s
+  - Input_Move left, right
+- [ ] Add paddle display logic, given size, and position
+- [ ] Add paddle movement given inputs and speed
+
 ### Next steps
 - [X] Rewrite vga module to have active area in lowest portion of address
   - [X] Active Area - Front Porch - Sync - Back Porch
   - [X] Test with 640x480@60hz (vga)
-  - [ ] Test with 1280x800@60hz (native for our screen?)
+  - [X] Test with 1280x800@60hz (native for our screen?)
 - [o] Pattern based on pixel position
   - [o] Border
   - [ ] Test pattern
@@ -25,6 +33,20 @@ Spartan 3an development board for now, also have a zedboard with a Zynq
 - [ ] Custom controllers
 - [ ] Classic retro controllers
 
+### Moar steps
+- [X] Basic VGA Output
+  - [X] Solid color @ resolution
+  - [ ] Check capture with vga->hdmi, mira & obs
+  - [ ] Pattern based on pixel position
+- [ ] Pong
+- [ ] Simple limited lines/vectors/shapes
+- [ ] Tilemap system
+- [ ] Sprite system
+- [ ] Text system
+- [ ] Simplified 2D "shader" process
+
+- [ ] Custom controllers
+- [ ] Classic retro controllers
 
 
 ### Done
@@ -82,11 +104,3 @@ Spartan 3an development board for now, also have a zedboard with a Zynq
 ### Random thoughts
 - Vga module should just be for timing
   - Colors will always be passthrough
-
-### Early stream Setup - 10 Min
-- [X] Cleanup from last stream
-  - [X] Add git commits
-  - [X] Check checklists
-  - [X] Boomark, link, and close tabs
-
-
