@@ -3,21 +3,20 @@
 
 module top(
    input clk_50m
+  ,input button_north, button_south
 
-  ,output [3:0] vga_r
-  ,output [3:0] vga_g
-  ,output [3:0] vga_b
+  ,output [3:0] vga_r, vga_g, vga_b
 
-  ,output vga_horizontal_sync
-  ,output vga_vertical_sync
+  ,output vga_horizontal_sync, vga_vertical_sync
+  ,output [2:0] led
 );
 
-// 25 Mhz Pixel Clock for 640x480x60hz
+//1280x800@60hz - 83.5Mhz ideal pixel clock - 83.333Mhz w/ 5/3*50m
 wire pixel_clock;
 DCM_SP #(
    .CLKFX_MULTIPLY(5)
   ,.CLKFX_DIVIDE(3)
-  //,.CLKIN_PERIOD(20.0)
+  ,.CLKIN_PERIOD(20.0)
 
 ) DCM_SP_inst (
    .CLKIN(clk_50m)
@@ -45,8 +44,8 @@ wire visible_area;
 //`define BLUE_BITS  3:0
 reg [COLOR_BIT_MAX:0] rgb12;
 
-localparam GRAPHICS_WIDTH  = 1280; //TODO Link
-localparam GRAPHICS_HEIGHT =  800; //TODO Link
+localparam GRAPHICS_WIDTH  = 1280;
+localparam GRAPHICS_HEIGHT =  800;
 vga #(
    .H_VISIBLE_AREA(GRAPHICS_WIDTH)
   ,.H_FRONT_PORCH(72)
@@ -73,31 +72,106 @@ vga #(
 
   ,.visible_area(visible_area)
 );
-localparam COLOR_POLARITY = 1'b1;
 
+// PONG!
+// Border
+localparam BORDER_WIDTH = 50;
+localparam BORDER_COLOR_R = 4'h3;
+localparam BORDER_COLOR_G = 4'h0;
+localparam BORDER_COLOR_B = 4'h3;
+//TODO Create AABB overlap component
+assign on_h_border = h_position < BORDER_WIDTH ||
+  (h_position + BORDER_WIDTH) > GRAPHICS_WIDTH;
+assign on_v_border = v_position < BORDER_WIDTH ||
+  (v_position + BORDER_WIDTH) > GRAPHICS_HEIGHT;
+assign on_border = on_h_border || on_v_border;
+
+// Paddle
+localparam PADDLE_LENGTH = 200;
+localparam PADDLE_WIDTH = 20;
+localparam PADDLE_SPEED = 10;
+localparam PADDLE_START_X = 110;
+localparam PADDLE_START_Y = 110;
+localparam PADDLE_COLOR_R = 4'hf;
+localparam PADDLE_COLOR_G = 4'hf;
+localparam PADDLE_COLOR_B = 4'hf;
+localparam PADDLE_Y_MIN = BORDER_WIDTH;
+localparam PADDLE_Y_MAX = GRAPHICS_HEIGHT-PADDLE_LENGTH-(BORDER_WIDTH*2);
+
+localparam PADDLE_POSITION_REG_MAX = POSITION_REG_MAX;
+reg [PADDLE_POSITION_REG_MAX:0] paddle_x = PADDLE_START_X;
+reg [PADDLE_POSITION_REG_MAX:0] paddle_y = PADDLE_START_Y;
+
+reg [PADDLE_POSITION_REG_MAX:0] paddle_x2 = PADDLE_START_X+PADDLE_WIDTH;
+reg [PADDLE_POSITION_REG_MAX:0] paddle_y2 = PADDLE_START_Y+PADDLE_LENGTH;
+
+always @(posedge pixel_clock) begin
+   paddle_x2 <= paddle_x + PADDLE_WIDTH;
+   paddle_y2 <= paddle_y + PADDLE_LENGTH;
+ end
+
+reg last_vsync;
+always @(posedge pixel_clock) begin
+  last_vsync <= vga_vertical_sync;
+  if (vga_vertical_sync && !last_vsync) begin
+    //Tick logic
+    casez({button_north, button_south})
+      2'b01: begin
+        if (paddle_y < PADDLE_SPEED+BORDER_WIDTH) begin
+          //Clamp to border
+          paddle_y <= BORDER_WIDTH;
+        end else begin
+          paddle_y <= paddle_y - PADDLE_SPEED;
+        end
+      end
+      2'b10: begin
+        if (paddle_y > GRAPHICS_HEIGHT-(PADDLE_LENGTH+BORDER_WIDTH+PADDLE_SPEED)) begin
+          //Clamp to border
+          paddle_y <= GRAPHICS_HEIGHT-(BORDER_WIDTH+PADDLE_LENGTH);
+        end else begin
+          paddle_y <= paddle_y + PADDLE_SPEED;
+        end
+      end
+    endcase
+  end
+end
+
+assign on_x_paddle = (h_position > paddle_x) && (h_position <= paddle_x2);
+assign on_y_paddle = (v_position > paddle_y) && (v_position <= paddle_y2);
+assign on_paddle = on_x_paddle && on_y_paddle;
+
+assign led[0] = on_paddle;
+assign led[1] = on_x_paddle;
+assign led[2] = on_y_paddle;
+
+localparam BACKGROUND_COLOR_R = 4'h0;
+localparam BACKGROUND_COLOR_G = 4'h0;
+localparam BACKGROUND_COLOR_B = 4'h0;
+
+// Active Area Blanking
 assign vga_r = visible_area ? rgb12[11:8]: 0;
 assign vga_g = visible_area ? rgb12[7:4] : 0;
 assign vga_b = visible_area ? rgb12[3:0] : 0;
 
-localparam BORDER_WIDTH = 100;
-wire on_h_border = h_position < BORDER_WIDTH ||
-  (h_position + BORDER_WIDTH) > GRAPHICS_WIDTH;
-wire on_v_border = v_position < BORDER_WIDTH ||
-  (v_position + BORDER_WIDTH) > GRAPHICS_HEIGHT;
-wire on_border = on_h_border || on_v_border;
-
+// Final RGB
 always @(posedge pixel_clock) begin
-  if(on_border) begin
-    //rgb12 <= 12'h03_00_03; //BUG Doesn't work! Endian issue maybe?
-    rgb12[11:8]   <= 4'h03;
-    rgb12[7:4] <= 4'h00;
-    rgb12[3:0]  <= 4'h03;
-  end else begin
-    //rgb12 <= 12'h00_00_00;
-    rgb12[11:8]   <= 4'h00;
-    rgb12[7:4] <= 4'h00;
-    rgb12[3:0]  <= 4'h00;
-  end
+  casez({on_paddle, on_border})
+    2'b1?: begin
+      rgb12[11:8] <= PADDLE_COLOR_R;
+      rgb12[7:4]  <= PADDLE_COLOR_G;
+      rgb12[3:0]  <= PADDLE_COLOR_B;
+    end
+    2'b?1: begin
+      rgb12[11:8] <= BORDER_COLOR_R;
+      rgb12[7:4]  <= BORDER_COLOR_G;
+      rgb12[3:0]  <= BORDER_COLOR_B;
+    end
+    default: begin
+      rgb12[11:8] <= BACKGROUND_COLOR_R;
+      rgb12[7:4]  <= BACKGROUND_COLOR_G;
+      rgb12[3:0]  <= BACKGROUND_COLOR_B;
+    end
+  endcase
 end
 
 endmodule

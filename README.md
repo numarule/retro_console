@@ -7,7 +7,7 @@ Spartan 3an development board for now, also have a zedboard with a Zynq
 ## What are we doing *right now*?
 ### Conquer pong
 - [ ] Paddle
-  - [ ] Define
+  - [*CURRENT*] Define
     - Size - w, h
     - Position - x
     - Speed - s
@@ -41,9 +41,9 @@ Spartan 3an development board for now, also have a zedboard with a Zynq
   - [X] Test with 1280x800@60hz (native for our screen?)
 - [o] Pattern based on pixel position
   - [o] Border
-  - [ ] Test pattern
-- [ ] Abstract timings and resolutions into predefined table of choices
+  - [ ] Test pattern?
 - [ ] Pong
+- [ ] Abstract timings and resolutions into predefined table of choices
 - [ ] Check capture with vga->hdmi, mira & obs
 - [ ] Simple limited lines/vectors/shapes
 - [ ] Tilemap system
