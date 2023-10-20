@@ -1,15 +1,6 @@
 `timescale 1ns / 1ps
 `include "vga.v"
 
-//////////////////////////////////////////////////////////////////////////////////
-// Company: The People
-// Streamer: Numa
-//
-// Create Date:    04:30:32 10/09/2023
-// Design Name: Old Board test
-// Module Name:    top
-// Revision 0.01 - File Created
-//////////////////////////////////////////////////////////////////////////////////
 module top(
    input clk_50m
 
@@ -20,13 +11,6 @@ module top(
   ,output vga_horizontal_sync
   ,output vga_vertical_sync
 );
-
-  // 1280x800@60  - 83.5Mhz   - 50Mhz * 5/3 (83.333)
-  // Visible Area - Polarity  - Front Porch - Sync - Back Porch - Total
-  // 1280         - neg       - 72          - 128  - 200        - 1680
-  // Visible Area - Polarity  - Front Porch - Sync - Back Porch - Total
-  // 800          - pos       - 3           - 6    - 22         - 831
-
 
 // 25 Mhz Pixel Clock for 640x480x60hz
 wire pixel_clock;
@@ -63,8 +47,6 @@ reg [COLOR_BIT_MAX:0] rgb12;
 
 localparam GRAPHICS_WIDTH  = 1280; //TODO Link
 localparam GRAPHICS_HEIGHT =  800; //TODO Link
-//localparam GRAPHICS_WIDTH  = 640; //TODO Link
-//localparam GRAPHICS_HEIGHT =  480; //TODO Link
 vga #(
    .H_VISIBLE_AREA(GRAPHICS_WIDTH)
   ,.H_FRONT_PORCH(72)
@@ -106,15 +88,15 @@ wire on_border = on_h_border || on_v_border;
 
 always @(posedge pixel_clock) begin
   if(on_border) begin
-    //rgb12 <= 12'h03_00_03;
+    //rgb12 <= 12'h03_00_03; //BUG Doesn't work! Endian issue maybe?
     rgb12[11:8]   <= 4'h03;
     rgb12[7:4] <= 4'h00;
     rgb12[3:0]  <= 4'h03;
   end else begin
-    rgb12 <= 12'h00_00_00;
-    //rgb12[11:8]   <= 4'h00;
-    //rgb12[7:4] <= 4'h00;
-    //rgb12[3:0]  <= 4'h00;
+    //rgb12 <= 12'h00_00_00;
+    rgb12[11:8]   <= 4'h00;
+    rgb12[7:4] <= 4'h00;
+    rgb12[3:0]  <= 4'h00;
   end
 end
 

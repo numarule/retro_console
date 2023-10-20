@@ -5,13 +5,34 @@ Designing our own *retro console* from _scratch_ in verilog/fpga
 Spartan 3an development board for now, also have a zedboard with a Zynq
 
 ## What are we doing *right now*?
-- [ ] Define paddle
-  - Size - w, h
-  - Position - x
-  - Speed - s
-  - Input_Move left, right
-- [ ] Add paddle display logic, given size, and position
-- [ ] Add paddle movement given inputs and speed
+### Conquer pong
+- [ ] Paddle
+  - [ ] Define
+    - Size - w, h
+    - Position - x
+    - Speed - s
+    - Input_Move left, right
+  - [ ] Display logic given size and position
+  - [ ] Movement given inputs and speed
+- [ ] Ball
+  - [ ] Define
+    - Size - r
+    - Position - x, y
+    - Direction?
+    - Speed - s?
+  - [ ] Display logic given size and position
+  - [ ] Movement given inputs, direction and speed
+- [ ] Score
+  - [ ] Define
+    - Reg x 2
+  - [ ] Display
+  - [ ] Logic
+- [ ] Game state
+  - [ ] Win/Lose conditions
+  - [ ] Reset
+- [ ] AI
+  - [ ] Simple up/down
+  - [ ] Moore?
 
 ### Next steps
 - [X] Rewrite vga module to have active area in lowest portion of address
