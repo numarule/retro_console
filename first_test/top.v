@@ -146,16 +146,19 @@ localparam BALL_RADIUS_SQUARED = BALL_RADIUS*BALL_RADIUS;
 localparam BALL_START_X = GRAPHICS_WIDTH /2;
 localparam BALL_START_Y = GRAPHICS_HEIGHT/2;
 localparam BALL_COLOR_R = 4'h0;
-localparam BALL_COLOR_G = 4'hf;
-localparam BALL_COLOR_B = 4'hf;
+localparam BALL_COLOR_G = 4'h3;
+localparam BALL_COLOR_B = 4'h3;
 
 localparam BALL_POSITION_REG_MAX = POSITION_REG_MAX;
 
 reg [BALL_POSITION_REG_MAX:0] ball_x = BALL_START_X;
 reg [BALL_POSITION_REG_MAX:0] ball_y = BALL_START_Y;
 
-wire [PADDLE_POSITION_REG_MAX:0] dX = h_position - ball_x;
-wire [PADDLE_POSITION_REG_MAX:0] dY = v_position - ball_y;
+wire is_pos_dx = ball_x < h_position;
+wire is_pos_dy = ball_y < v_position;
+
+wire [PADDLE_POSITION_REG_MAX:0] dX = is_pos_dx ? h_position - ball_x : ball_x - h_position;
+wire [PADDLE_POSITION_REG_MAX:0] dY = is_pos_dy ? v_position - ball_y : ball_y - v_position;
 
 wire [PADDLE_POSITION_REG_MAX*2:0] ball_distance_squared = dX * dX + dY * dY;
 wire on_ball = BALL_RADIUS_SQUARED > ball_distance_squared;
@@ -172,17 +175,17 @@ assign vga_b = visible_area ? rgb12[ 3:0] : 0;
 // Final RGB
 always @(posedge pixel_clock) begin
   casez({on_ball, on_paddle, on_border})
-    2'b1??: begin
+    'b1??: begin
       rgb12[11:8] <= BALL_COLOR_R;
       rgb12[7:4]  <= BALL_COLOR_G;
       rgb12[3:0]  <= BALL_COLOR_B;
     end
-    2'b?1?: begin
+    'b?1?: begin
       rgb12[11:8] <= PADDLE_COLOR_R;
       rgb12[7:4]  <= PADDLE_COLOR_G;
       rgb12[3:0]  <= PADDLE_COLOR_B;
     end
-    2'b??1: begin
+    'b??1: begin
       rgb12[11:8] <= BORDER_COLOR_R;
       rgb12[7:4]  <= BORDER_COLOR_G;
       rgb12[3:0]  <= BORDER_COLOR_B;
