@@ -141,7 +141,7 @@ assign on_y_paddle = (v_position > paddle_y) && (v_position <= paddle_y2);
 assign on_paddle = on_x_paddle && on_y_paddle;
 
 //Ball
-localparam BALL_RADIUS = 10;
+localparam BALL_RADIUS = 200;
 localparam BALL_RADIUS_SQUARED = BALL_RADIUS*BALL_RADIUS;
 localparam BALL_START_X = GRAPHICS_WIDTH /2;
 localparam BALL_START_Y = GRAPHICS_HEIGHT/2;
@@ -157,13 +157,8 @@ reg [BALL_POSITION_REG_MAX:0] ball_y = BALL_START_Y;
 wire [PADDLE_POSITION_REG_MAX:0] dX = h_position - ball_x;
 wire [PADDLE_POSITION_REG_MAX:0] dY = v_position - ball_y;
 
-wire [PADDLE_POSITION_REG_MAX*2:0] ball_distance_squared = dX * dY;
-//ball_radius*ball_radius >= dX*dY
-assign dX = h_position - ball_x;
-assign dY = v_position - ball_y;
-assign ball_distance_squared = dX * dY;
-
-assign on_ball = BALL_RADIUS_SQUARED >= ball_distance_squared;
+wire [PADDLE_POSITION_REG_MAX*2:0] ball_distance_squared = dX * dX + dY * dY;
+wire on_ball = BALL_RADIUS_SQUARED > ball_distance_squared;
 
 localparam BACKGROUND_COLOR_R = 4'h0;
 localparam BACKGROUND_COLOR_G = 4'h0;
