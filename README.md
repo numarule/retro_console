@@ -6,22 +6,29 @@ Spartan 3an development board for now, also have a zedboard with a Zynq
 
 ## What are we doing *right now*?
 ### Conquer pong
-- [ ] Paddle
-  - [*CURRENT*] Define
+- [o] Paddle
+  - [X] Define
     - Size - w, h
-    - Position - x
+    - Position - y
     - Speed - s
     - Input_Move left, right
-  - [ ] Display logic given size and position
-  - [ ] Movement given inputs and speed
-- [ ] Ball
-  - [ ] Define
+  - [X] Display logic given size and position
+  - [X] Movement given inputs and speed
+  - [X] Position limits
+  - [ ] Refactor into verilog paddle component
+- [*CURRENT*] Ball
+  - [*CURRENT*] Define
     - Size - r
     - Position - x, y
     - Direction?
     - Speed - s?
   - [ ] Display logic given size and position
   - [ ] Movement given inputs, direction and speed
+- [ ] Factor out game tick clock component
+- [ ] Collision logic components
+  - [ ] AABB/AABB
+  - [ ] AABB/Circle
+  - [ ] Circle/Circle
 - [ ] Score
   - [ ] Define
     - Reg x 2
@@ -33,6 +40,7 @@ Spartan 3an development board for now, also have a zedboard with a Zynq
 - [ ] AI
   - [ ] Simple up/down
   - [ ] Moore?
+- [ ] Multiball
 
 ### Next steps
 - [X] Rewrite vga module to have active area in lowest portion of address

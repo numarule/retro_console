@@ -140,28 +140,54 @@ assign on_x_paddle = (h_position > paddle_x) && (h_position <= paddle_x2);
 assign on_y_paddle = (v_position > paddle_y) && (v_position <= paddle_y2);
 assign on_paddle = on_x_paddle && on_y_paddle;
 
-assign led[0] = on_paddle;
-assign led[1] = on_x_paddle;
-assign led[2] = on_y_paddle;
+//Ball
+localparam BALL_RADIUS = 10;
+localparam BALL_RADIUS_SQUARED = BALL_RADIUS*BALL_RADIUS;
+localparam BALL_START_X = GRAPHICS_WIDTH /2;
+localparam BALL_START_Y = GRAPHICS_HEIGHT/2;
+localparam BALL_COLOR_R = 4'h0;
+localparam BALL_COLOR_G = 4'hf;
+localparam BALL_COLOR_B = 4'hf;
+
+localparam BALL_POSITION_REG_MAX = POSITION_REG_MAX;
+
+reg [BALL_POSITION_REG_MAX:0] ball_x = BALL_START_X;
+reg [BALL_POSITION_REG_MAX:0] ball_y = BALL_START_Y;
+
+wire [PADDLE_POSITION_REG_MAX:0] dX = h_position - ball_x;
+wire [PADDLE_POSITION_REG_MAX:0] dY = v_position - ball_y;
+
+wire [PADDLE_POSITION_REG_MAX*2:0] ball_distance_squared = dX * dY;
+//ball_radius*ball_radius >= dX*dY
+assign dX = h_position - ball_x;
+assign dY = v_position - ball_y;
+assign ball_distance_squared = dX * dY;
+
+assign on_ball = BALL_RADIUS_SQUARED >= ball_distance_squared;
 
 localparam BACKGROUND_COLOR_R = 4'h0;
 localparam BACKGROUND_COLOR_G = 4'h0;
 localparam BACKGROUND_COLOR_B = 4'h0;
 
 // Active Area Blanking
-assign vga_r = visible_area ? rgb12[11:8]: 0;
-assign vga_g = visible_area ? rgb12[7:4] : 0;
-assign vga_b = visible_area ? rgb12[3:0] : 0;
+assign vga_r = visible_area ? rgb12[11:8] : 0;
+assign vga_g = visible_area ? rgb12[ 7:4] : 0;
+assign vga_b = visible_area ? rgb12[ 3:0] : 0;
 
 // Final RGB
 always @(posedge pixel_clock) begin
-  casez({on_paddle, on_border})
-    2'b1?: begin
+  casez({on_ball, on_paddle, on_border})
+    2'b1??: begin
+      rgb12[11:8] <= BALL_COLOR_R;
+      rgb12[7:4]  <= BALL_COLOR_G;
+      rgb12[3:0]  <= BALL_COLOR_B;
+    end
+    2'b?1?: begin
       rgb12[11:8] <= PADDLE_COLOR_R;
       rgb12[7:4]  <= PADDLE_COLOR_G;
       rgb12[3:0]  <= PADDLE_COLOR_B;
     end
-    2'b?1: begin
+    2'b??1: begin
       rgb12[11:8] <= BORDER_COLOR_R;
       rgb12[7:4]  <= BORDER_COLOR_G;
       rgb12[3:0]  <= BORDER_COLOR_B;
