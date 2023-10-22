@@ -11,18 +11,6 @@ module top(
   ,output [2:0] led
 );
 
-//1280x800@60hz - 83.5Mhz ideal pixel clock - 83.333Mhz w/ 5/3*50m
-wire pixel_clock;
-DCM_SP #(
-   .CLKFX_MULTIPLY(5)
-  ,.CLKFX_DIVIDE(3)
-  ,.CLKIN_PERIOD(20.0)
-
-) DCM_SP_inst (
-   .CLKIN(clk_50m)
-  ,.CLKFX(pixel_clock)
-  ,.RST(0)
-);
 // TODO Source elsewhere with log2(ceil())
 localparam POSITION_REG_MAX = 11;
 localparam R_BIT_DEPTH = 4;
@@ -46,24 +34,15 @@ reg [COLOR_BIT_MAX:0] rgb12;
 
 localparam GRAPHICS_WIDTH  = 1280;
 localparam GRAPHICS_HEIGHT =  800;
-vga #(
-   .H_VISIBLE_AREA(GRAPHICS_WIDTH)
-  ,.H_FRONT_PORCH(72)
-  ,.H_SYNC_WIDTH(128)
-  ,.H_BACK_PORCH(200)
-  ,.H_ACTIVE_POLARITY(1'b0)
 
-  ,.V_VISIBLE_AREA(GRAPHICS_HEIGHT)
-  ,.V_FRONT_PORCH(3)
-  ,.V_SYNC_WIDTH(6)
-  ,.V_BACK_PORCH(22)
-  ,.V_ACTIVE_POLARITY(1'b1)
-
-  ,.H_REG_MAX(POSITION_REG_MAX)
-  ,.V_REG_MAX(POSITION_REG_MAX)
+vga#(
+   .WIDTH(1280)
+  ,.HEIGHT(800)
+//  ,.REFRESH_RATE(60)
 ) vga_inst (
-   .pixel_clock(pixel_clock)
+   .clk_50m(clk_50m)
 
+  ,.pixel_clock(pixel_clock)
   ,.vga_horizontal_sync(vga_horizontal_sync)
   ,.vga_vertical_sync(vga_vertical_sync)
 
@@ -73,7 +52,7 @@ vga #(
   ,.visible_area(visible_area)
 );
 
-// PONG!
+// GAME!
 // Border
 localparam BORDER_WIDTH = 50;
 localparam BORDER_COLOR = 12'h303;
@@ -128,6 +107,7 @@ always @(posedge pixel_clock) begin
           paddle_y <= paddle_y + PADDLE_SPEED;
         end
       end
+      default: paddle_y <= paddle_y; //NOP
     endcase
   end
 end

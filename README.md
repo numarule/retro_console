@@ -29,6 +29,8 @@ Spartan 3an development board for now, also have a zedboard with a Zynq
     - OR factor abs-difference into component
 
   - Fixed point positions?
+  - 12'hfff -> COLOR_BITWIDTH'hfff?
+  - ,.pixel_clock(pixel_clock) -> pixel_clock?
 
   - [ ] Movement given inputs, direction and speed
     - [ ] Define movement registers
