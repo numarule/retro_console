@@ -16,14 +16,29 @@ Spartan 3an development board for now, also have a zedboard with a Zynq
   - [X] Movement given inputs and speed
   - [X] Position limits
   - [ ] Refactor into verilog paddle component
-- [*CURRENT*] Ball
-  - [*CURRENT*] Define
-    - Size - r
-    - Position - x, y
-    - Direction?
-    - Speed - s?
-  - [ ] Display logic given size and position
+  - [ ] Refactor ball component
+- [X] Ball
+  - [o] Define
+    - [X] Size - r
+    - [X] Position - x, y
+    - [ ] Direction?
+    - [ ] Speed - s?
+  - [X] Display logic given size and position
+  - [*CURRENT*] Change to signed positions for entities?
+    - Allows for easier signed arithmatic for collision and other formulae
+    - OR factor abs-difference into component
+
+  - Fixed point positions?
+
   - [ ] Movement given inputs, direction and speed
+    - [ ] Define movement registers
+      - [ ] Change to signed positions?
+        - Signed velocity or speed and direction?
+      - [ ] Define possible angles
+        - [ ] Angle tables calculated at synth time?
+      - [ ] Generate verilog range table for indexing into angle table
+        - Based on ball's collision point relative to/with paddle
+
 - [ ] Factor out game tick clock component
 - [ ] Collision logic components
   - [ ] AABB/AABB
@@ -50,33 +65,25 @@ Spartan 3an development board for now, also have a zedboard with a Zynq
 - [o] Pattern based on pixel position
   - [o] Border
   - [ ] Test pattern?
+- [ ] Sdram?
 - [ ] Pong
 - [ ] Abstract timings and resolutions into predefined table of choices
 - [ ] Check capture with vga->hdmi, mira & obs
 - [ ] Simple limited lines/vectors/shapes
 - [ ] Tilemap system
 - [ ] Sprite system
+- [ ] Tetris?
 - [ ] Text system
 - [ ] Simplified 2D "shader" process
 
 - [ ] Custom controllers
 - [ ] Classic retro controllers
 
-### Moar steps
-- [X] Basic VGA Output
-  - [X] Solid color @ resolution
-  - [ ] Check capture with vga->hdmi, mira & obs
-  - [ ] Pattern based on pixel position
-- [ ] Pong
-- [ ] Simple limited lines/vectors/shapes
-- [ ] Tilemap system
-- [ ] Sprite system
-- [ ] Text system
-- [ ] Simplified 2D "shader" process
-
-- [ ] Custom controllers
-- [ ] Classic retro controllers
-
+- [ ] Testbenches
+- [ ] Learn more Simulation
+- [ ] Altera tools
+- [ ] Sdram framebuffer
+- [ ] Easy nonvolatile ram? (forget name)
 
 ### Done
 - [X] Install required proprietary xilinx software
