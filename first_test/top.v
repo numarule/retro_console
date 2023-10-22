@@ -76,9 +76,7 @@ vga #(
 // PONG!
 // Border
 localparam BORDER_WIDTH = 50;
-localparam BORDER_COLOR_R = 4'h3;
-localparam BORDER_COLOR_G = 4'h0;
-localparam BORDER_COLOR_B = 4'h3;
+localparam BORDER_COLOR = 12'h303;
 //TODO Create AABB overlap component
 assign on_h_border = h_position < BORDER_WIDTH ||
   (h_position + BORDER_WIDTH) > GRAPHICS_WIDTH;
@@ -92,9 +90,7 @@ localparam PADDLE_WIDTH = 20;
 localparam PADDLE_SPEED = 10;
 localparam PADDLE_START_X = 110;
 localparam PADDLE_START_Y = 110;
-localparam PADDLE_COLOR_R = 4'hf;
-localparam PADDLE_COLOR_G = 4'hf;
-localparam PADDLE_COLOR_B = 4'hf;
+localparam PADDLE_COLOR = 12'hfff;
 localparam PADDLE_Y_MIN = BORDER_WIDTH;
 localparam PADDLE_Y_MAX = GRAPHICS_HEIGHT-PADDLE_LENGTH-(BORDER_WIDTH*2);
 
@@ -141,13 +137,11 @@ assign on_y_paddle = (v_position > paddle_y) && (v_position <= paddle_y2);
 assign on_paddle = on_x_paddle && on_y_paddle;
 
 //Ball
-localparam BALL_RADIUS = 200;
+localparam BALL_RADIUS = 10;
 localparam BALL_RADIUS_SQUARED = BALL_RADIUS*BALL_RADIUS;
 localparam BALL_START_X = GRAPHICS_WIDTH /2;
 localparam BALL_START_Y = GRAPHICS_HEIGHT/2;
-localparam BALL_COLOR_R = 4'h0;
-localparam BALL_COLOR_G = 4'h3;
-localparam BALL_COLOR_B = 4'h3;
+localparam BALL_COLOR = 12'hfff;
 
 localparam BALL_POSITION_REG_MAX = POSITION_REG_MAX;
 
@@ -163,9 +157,7 @@ wire [PADDLE_POSITION_REG_MAX:0] dY = is_pos_dy ? v_position - ball_y : ball_y -
 wire [PADDLE_POSITION_REG_MAX*2:0] ball_distance_squared = dX * dX + dY * dY;
 wire on_ball = BALL_RADIUS_SQUARED > ball_distance_squared;
 
-localparam BACKGROUND_COLOR_R = 4'h0;
-localparam BACKGROUND_COLOR_G = 4'h0;
-localparam BACKGROUND_COLOR_B = 4'h0;
+localparam BACKGROUND_COLOR = 12'h000;
 
 // Active Area Blanking
 assign vga_r = visible_area ? rgb12[11:8] : 0;
@@ -176,24 +168,16 @@ assign vga_b = visible_area ? rgb12[ 3:0] : 0;
 always @(posedge pixel_clock) begin
   casez({on_ball, on_paddle, on_border})
     'b1??: begin
-      rgb12[11:8] <= BALL_COLOR_R;
-      rgb12[7:4]  <= BALL_COLOR_G;
-      rgb12[3:0]  <= BALL_COLOR_B;
+      rgb12 <= BALL_COLOR;
     end
     'b?1?: begin
-      rgb12[11:8] <= PADDLE_COLOR_R;
-      rgb12[7:4]  <= PADDLE_COLOR_G;
-      rgb12[3:0]  <= PADDLE_COLOR_B;
+      rgb12 <= PADDLE_COLOR;
     end
     'b??1: begin
-      rgb12[11:8] <= BORDER_COLOR_R;
-      rgb12[7:4]  <= BORDER_COLOR_G;
-      rgb12[3:0]  <= BORDER_COLOR_B;
+      rgb12 <= BORDER_COLOR;
     end
     default: begin
-      rgb12[11:8] <= BACKGROUND_COLOR_R;
-      rgb12[7:4]  <= BACKGROUND_COLOR_G;
-      rgb12[3:0]  <= BACKGROUND_COLOR_B;
+      rgb12 <= BACKGROUND_COLOR;
     end
   endcase
 end
