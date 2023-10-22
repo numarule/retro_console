@@ -1,5 +1,6 @@
 `timescale 1ns / 1ps
 `include "vga.v"
+`include "aabb_collision.v"
 
 module top(
    input clk_50m
@@ -56,12 +57,22 @@ vga#(
 // Border
 localparam BORDER_WIDTH = 50;
 localparam BORDER_COLOR = 12'h303;
-//TODO Create AABB overlap component
-assign on_h_border = h_position < BORDER_WIDTH ||
-  (h_position + BORDER_WIDTH) > GRAPHICS_WIDTH;
-assign on_v_border = v_position < BORDER_WIDTH ||
-  (v_position + BORDER_WIDTH) > GRAPHICS_HEIGHT;
-assign on_border = on_h_border || on_v_border;
+
+aabb_collision#(
+  .POSITION_REG_MAX(POSITION_REG_MAX)
+) border_aabb_col (
+   .box1_x1(h_position)
+  ,.box1_y1(v_position)
+  ,.box1_x2(h_position)
+  ,.box1_y2(v_position)
+
+  ,.box2_x1(BORDER_WIDTH)
+  ,.box2_y1(BORDER_WIDTH)
+  ,.box2_x2(GRAPHICS_WIDTH - BORDER_WIDTH)
+  ,.box2_y2(GRAPHICS_HEIGHT - BORDER_WIDTH)
+
+  ,.overlap(on_playarea)
+);
 
 // Paddle
 localparam PADDLE_LENGTH = 200;
@@ -76,14 +87,6 @@ localparam PADDLE_Y_MAX = GRAPHICS_HEIGHT-PADDLE_LENGTH-(BORDER_WIDTH*2);
 localparam PADDLE_POSITION_REG_MAX = POSITION_REG_MAX;
 reg [PADDLE_POSITION_REG_MAX:0] paddle_x = PADDLE_START_X;
 reg [PADDLE_POSITION_REG_MAX:0] paddle_y = PADDLE_START_Y;
-
-reg [PADDLE_POSITION_REG_MAX:0] paddle_x2 = PADDLE_START_X+PADDLE_WIDTH;
-reg [PADDLE_POSITION_REG_MAX:0] paddle_y2 = PADDLE_START_Y+PADDLE_LENGTH;
-
-always @(posedge pixel_clock) begin
-   paddle_x2 <= paddle_x + PADDLE_WIDTH;
-   paddle_y2 <= paddle_y + PADDLE_LENGTH;
- end
 
 reg last_vsync;
 always @(posedge pixel_clock) begin
@@ -112,9 +115,22 @@ always @(posedge pixel_clock) begin
   end
 end
 
-assign on_x_paddle = (h_position > paddle_x) && (h_position <= paddle_x2);
-assign on_y_paddle = (v_position > paddle_y) && (v_position <= paddle_y2);
-assign on_paddle = on_x_paddle && on_y_paddle;
+wire on_paddle;
+aabb_collision#(
+  .POSITION_REG_MAX(POSITION_REG_MAX)
+) paddle_aabb_col (
+   .box1_x1(h_position)
+  ,.box1_y1(v_position)
+  ,.box1_x2(h_position)
+  ,.box1_y2(v_position)
+
+  ,.box2_x1(paddle_x)
+  ,.box2_y1(paddle_y)
+  ,.box2_x2(paddle_x + PADDLE_WIDTH)
+  ,.box2_y2(paddle_y + PADDLE_LENGTH)
+
+  ,.overlap(on_paddle)
+);
 
 //Ball
 localparam BALL_RADIUS = 10;
@@ -146,7 +162,7 @@ assign vga_b = visible_area ? rgb12[ 3:0] : 0;
 
 // Final RGB
 always @(posedge pixel_clock) begin
-  casez({on_ball, on_paddle, on_border})
+  casez({on_ball, on_paddle,~on_playarea})
     'b1??: begin
       rgb12 <= BALL_COLOR;
     end

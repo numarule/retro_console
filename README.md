@@ -121,6 +121,8 @@ Spartan 3an development board for now, also have a zedboard with a Zynq
     - [X] Current pixel location
     - [X] Vsync
     - [X] Sync signals
+  - [X] Factor vga_sync logic into own module
+  - [X] Add higher-level vga module
 
 
 

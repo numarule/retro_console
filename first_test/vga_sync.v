@@ -1,5 +1,4 @@
 module vga_sync#(
-
    parameter H_VISIBLE_AREA = 640
   ,parameter H_FRONT_PORCH  =  16
   ,parameter H_SYNC_WIDTH   =  96
