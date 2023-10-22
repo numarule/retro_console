@@ -7,39 +7,25 @@ module top(
   ,input button_north, button_south
 
   ,output [3:0] vga_r, vga_g, vga_b
-
   ,output vga_horizontal_sync, vga_vertical_sync
   ,output [2:0] led
 );
 
-// TODO Source elsewhere with log2(ceil())
-localparam POSITION_REG_MAX = 11;
-localparam R_BIT_DEPTH = 4;
-localparam G_BIT_DEPTH = 4;
-localparam B_BIT_DEPTH = 4;
-localparam COLOR_BIT_DEPTH = R_BIT_DEPTH + G_BIT_DEPTH + B_BIT_DEPTH;
-localparam COLOR_BIT_MAX = COLOR_BIT_DEPTH-1;
-
-wire [POSITION_REG_MAX:0] h_position;
-wire [POSITION_REG_MAX:0] v_position;
-
-wire [POSITION_REG_MAX:0] h_active_position;
-wire [POSITION_REG_MAX:0] v_active_position;
-
-wire visible_area;
-
-//`define RED_BITS   11:8
-//`define GREEN_BITS 7:4
-//`define BLUE_BITS  3:0
-reg [COLOR_BIT_MAX:0] rgb12;
-
+// Setup Graphics
 localparam GRAPHICS_WIDTH  = 1280;
 localparam GRAPHICS_HEIGHT =  800;
-
+// TODO Source elsewhere with log2(ceil(TOTAL))
+localparam POSITION_REG_MAX = 11;
+//localparam GRAPHICS_REFRESH_RATE = 60;
+wire visible_area;
+wire [POSITION_REG_MAX:0] h_position;
+wire [POSITION_REG_MAX:0] v_position;
+wire [POSITION_REG_MAX:0] h_active_position;
+wire [POSITION_REG_MAX:0] v_active_position;
 vga#(
-   .WIDTH(1280)
-  ,.HEIGHT(800)
-//  ,.REFRESH_RATE(60)
+   .WIDTH(GRAPHICS_WIDTH)
+  ,.HEIGHT(GRAPHICS_HEIGHT)
+//  ,.REFRESH_RATE(GRAPHICS_REFRESH_RATE)
 ) vga_inst (
    .clk_50m(clk_50m)
 
@@ -57,22 +43,19 @@ vga#(
 // Border
 localparam BORDER_WIDTH = 50;
 localparam BORDER_COLOR = 12'h303;
-
 aabb_collision#(
   .POSITION_REG_MAX(POSITION_REG_MAX)
 ) border_aabb_col (
-   .box1_x1(h_position)
-  ,.box1_y1(v_position)
-  ,.box1_x2(h_position)
-  ,.box1_y2(v_position)
+   .bb1_x1(h_position), .bb1_y1(v_position)
+  ,.bb1_x2(h_position), .bb1_y2(v_position)
 
-  ,.box2_x1(BORDER_WIDTH)
-  ,.box2_y1(BORDER_WIDTH)
-  ,.box2_x2(GRAPHICS_WIDTH - BORDER_WIDTH)
-  ,.box2_y2(GRAPHICS_HEIGHT - BORDER_WIDTH)
+  ,.bb2_x1(BORDER_WIDTH), .bb2_y1(BORDER_WIDTH)
+  ,.bb2_x2(GRAPHICS_WIDTH - BORDER_WIDTH), .bb2_y2(GRAPHICS_HEIGHT - BORDER_WIDTH)
 
   ,.overlap(on_playarea)
 );
+
+
 
 // Paddle
 localparam PADDLE_LENGTH = 200;
@@ -119,18 +102,16 @@ wire on_paddle;
 aabb_collision#(
   .POSITION_REG_MAX(POSITION_REG_MAX)
 ) paddle_aabb_col (
-   .box1_x1(h_position)
-  ,.box1_y1(v_position)
-  ,.box1_x2(h_position)
-  ,.box1_y2(v_position)
+   .bb1_x1(h_position), .bb1_y1(v_position)
+  ,.bb1_x2(h_position), .bb1_y2(v_position)
 
-  ,.box2_x1(paddle_x)
-  ,.box2_y1(paddle_y)
-  ,.box2_x2(paddle_x + PADDLE_WIDTH)
-  ,.box2_y2(paddle_y + PADDLE_LENGTH)
+  ,.bb2_x1(paddle_x), .bb2_y1(paddle_y)
+  ,.bb2_x2(paddle_x + PADDLE_WIDTH), .bb2_y2(paddle_y + PADDLE_LENGTH)
 
   ,.overlap(on_paddle)
 );
+
+
 
 //Ball
 localparam BALL_RADIUS = 10;
@@ -153,28 +134,32 @@ wire [PADDLE_POSITION_REG_MAX:0] dY = is_pos_dy ? v_position - ball_y : ball_y -
 wire [PADDLE_POSITION_REG_MAX*2:0] ball_distance_squared = dX * dX + dY * dY;
 wire on_ball = BALL_RADIUS_SQUARED > ball_distance_squared;
 
-localparam BACKGROUND_COLOR = 12'h000;
+
+
+//Display
+localparam R_BIT_DEPTH = 4;
+localparam G_BIT_DEPTH = 4;
+localparam B_BIT_DEPTH = 4;
+localparam COLOR_BIT_DEPTH = R_BIT_DEPTH + G_BIT_DEPTH + B_BIT_DEPTH;
+localparam COLOR_BIT_MAX = COLOR_BIT_DEPTH-1;
+//`define RED_BITS   11:8
+//`define GREEN_BITS 7:4
+//`define BLUE_BITS  3:0
+reg [COLOR_BIT_MAX:0] rgb12;
 
 // Active Area Blanking
 assign vga_r = visible_area ? rgb12[11:8] : 0;
 assign vga_g = visible_area ? rgb12[ 7:4] : 0;
 assign vga_b = visible_area ? rgb12[ 3:0] : 0;
 
+localparam BACKGROUND_COLOR = 12'h000;
 // Final RGB
 always @(posedge pixel_clock) begin
-  casez({on_ball, on_paddle,~on_playarea})
-    'b1??: begin
-      rgb12 <= BALL_COLOR;
-    end
-    'b?1?: begin
-      rgb12 <= PADDLE_COLOR;
-    end
-    'b??1: begin
-      rgb12 <= BORDER_COLOR;
-    end
-    default: begin
-      rgb12 <= BACKGROUND_COLOR;
-    end
+  casez({on_ball, on_paddle,on_playarea})
+    'b1??:   rgb12 <= BALL_COLOR;
+    'b?1?:   rgb12 <= PADDLE_COLOR;
+    'b??0:   rgb12 <= BORDER_COLOR;
+    default: rgb12 <= BACKGROUND_COLOR;
   endcase
 end
 

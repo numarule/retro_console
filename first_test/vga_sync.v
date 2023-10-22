@@ -42,8 +42,7 @@ always @(posedge pixel_clock) h_position <= h_reset ? 0 : h_position + 1;
 
 wire h_sync = h_position >= H_SYNC_START && h_position < H_SYNC_END;
 //OPT Could this ternary be some binary operation of h_sync and H_ACTIVE_POLARITY?
-always @(posedge pixel_clock) vga_horizontal_sync <=
-  h_sync ? H_ACTIVE_POLARITY : ~H_ACTIVE_POLARITY;
+always @(posedge pixel_clock) vga_horizontal_sync <= h_sync ? H_ACTIVE_POLARITY : ~H_ACTIVE_POLARITY;
 
 // V
 wire h_at_max = h_position >= H_MAX;
@@ -58,8 +57,7 @@ always @(posedge pixel_clock) begin
 end
 
 wire v_sync = v_position >= V_SYNC_START && v_position < V_SYNC_END;
-always @(posedge pixel_clock) vga_vertical_sync <=
-  v_sync ? V_ACTIVE_POLARITY : ~V_ACTIVE_POLARITY;
+always @(posedge pixel_clock) vga_vertical_sync <= v_sync ? V_ACTIVE_POLARITY : ~V_ACTIVE_POLARITY;
 
 // visible?
 wire h_visibile_area = h_position < H_VISIBLE_AREA;
