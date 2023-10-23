@@ -24,13 +24,15 @@ Spartan 3an development board for now, also have a zedboard with a Zynq
     - [ ] Direction?
     - [ ] Speed - s?
   - [X] Display logic given size and position
-  - [*CURRENT*] Change to signed positions for entities?
+  - [*CURRENT*] Factor paddle and ball into own modules
+  - [*CURRENT*] Factor rect/circle drawing into own modules
+  - [ ] Change to signed positions for entities?
     - Allows for easier signed arithmatic for collision and other formulae
     - OR factor abs-difference into component
 
+  - [ ] Add second paddle
+
   - Fixed point positions?
-  - 12'hfff -> COLOR_BITWIDTH'hfff?
-  - ,.pixel_clock(pixel_clock) -> pixel_clock?
 
   - [ ] Movement given inputs, direction and speed
     - [ ] Define movement registers
@@ -125,6 +127,10 @@ Spartan 3an development board for now, also have a zedboard with a Zynq
   - [X] Add higher-level vga module
 
 
+  - 12'hfff -> COLOR_BITWIDTH'hfff?
+    - *nope*
+  - ,.pixel_clock(pixel_clock) -> pixel_clock?
+    - *nope*
 
 
 
@@ -137,6 +143,7 @@ Spartan 3an development board for now, also have a zedboard with a Zynq
     - LG4k being set as primary?
     - Qt4?
     - Java?
+  - Seems to revert to proper if xorg killed and restarted?
 
 ### Random Notes
 - percent diff = [|(a-b)|/(a+b)/2] × 100
