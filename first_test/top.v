@@ -1,6 +1,7 @@
 `timescale 1ns / 1ps
 `include "vga.v"
 `include "aabb_collision.v"
+`include "paddle.v"
 
 module top(
    input clk_50m
@@ -8,7 +9,7 @@ module top(
 
   ,output [3:0] vga_r, vga_g, vga_b
   ,output vga_horizontal_sync, vga_vertical_sync
-  ,output [2:0] led
+  ,output [7:0] leds
 );
 
 // Setup Graphics
@@ -58,45 +59,28 @@ aabb_collision#(
 
 
 // Paddle
+localparam PADDLE_COLOR = 12'hfff;
 localparam PADDLE_LENGTH = 200;
 localparam PADDLE_WIDTH = 20;
-localparam PADDLE_SPEED = 10;
-localparam PADDLE_START_X = 110;
-localparam PADDLE_START_Y = 110;
-localparam PADDLE_COLOR = 12'hfff;
-localparam PADDLE_Y_MIN = BORDER_WIDTH;
-localparam PADDLE_Y_MAX = GRAPHICS_HEIGHT-PADDLE_LENGTH-(BORDER_WIDTH*2);
+wire [POSITION_REG_MAX:0] paddle_x, paddle_y;
+paddle#(
+   .PADDLE_POSITION_REG_MAX(POSITION_REG_MAX)
+  ,.PADDLE_LENGTH(PADDLE_LENGTH)
+  ,.PADDLE_WIDTH(PADDLE_WIDTH)
+  ,.PADDLE_SPEED(10)
+  ,.PADDLE_START_X(110)
+  ,.PADDLE_START_Y(110)
+  ,.PADDLE_Y_MIN(BORDER_WIDTH)
+  ,.PADDLE_Y_MAX(GRAPHICS_HEIGHT-BORDER_WIDTH)
+) paddle (
+   .pixel_clock(pixel_clock)
+  ,.vertical_sync(vga_vertical_sync)
+  ,.move_forward(button_north)
+  ,.move_backward(button_south)
 
-localparam PADDLE_POSITION_REG_MAX = POSITION_REG_MAX;
-reg [PADDLE_POSITION_REG_MAX:0] paddle_x = PADDLE_START_X;
-reg [PADDLE_POSITION_REG_MAX:0] paddle_y = PADDLE_START_Y;
-
-reg last_vsync;
-always @(posedge pixel_clock) begin
-  last_vsync <= vga_vertical_sync;
-  if (vga_vertical_sync && !last_vsync) begin
-    //Tick logic
-    casez({button_north, button_south})
-      2'b01: begin
-        if (paddle_y < PADDLE_SPEED+BORDER_WIDTH) begin
-          //Clamp to border
-          paddle_y <= BORDER_WIDTH;
-        end else begin
-          paddle_y <= paddle_y - PADDLE_SPEED;
-        end
-      end
-      2'b10: begin
-        if (paddle_y > GRAPHICS_HEIGHT-(PADDLE_LENGTH+BORDER_WIDTH+PADDLE_SPEED)) begin
-          //Clamp to border
-          paddle_y <= GRAPHICS_HEIGHT-(BORDER_WIDTH+PADDLE_LENGTH);
-        end else begin
-          paddle_y <= paddle_y + PADDLE_SPEED;
-        end
-      end
-      default: paddle_y <= paddle_y; //NOP
-    endcase
-  end
-end
+  ,.paddle_x(paddle_x)
+  ,.paddle_y(paddle_y)
+);
 
 wire on_paddle;
 aabb_collision#(
@@ -110,7 +94,6 @@ aabb_collision#(
 
   ,.overlap(on_paddle)
 );
-
 
 
 //Ball
@@ -128,10 +111,10 @@ reg [BALL_POSITION_REG_MAX:0] ball_y = BALL_START_Y;
 wire is_pos_dx = ball_x < h_position;
 wire is_pos_dy = ball_y < v_position;
 
-wire [PADDLE_POSITION_REG_MAX:0] dX = is_pos_dx ? h_position - ball_x : ball_x - h_position;
-wire [PADDLE_POSITION_REG_MAX:0] dY = is_pos_dy ? v_position - ball_y : ball_y - v_position;
+wire [BALL_POSITION_REG_MAX:0] dX = is_pos_dx ? h_position - ball_x : ball_x - h_position;
+wire [BALL_POSITION_REG_MAX:0] dY = is_pos_dy ? v_position - ball_y : ball_y - v_position;
 
-wire [PADDLE_POSITION_REG_MAX*2:0] ball_distance_squared = dX * dX + dY * dY;
+wire [BALL_POSITION_REG_MAX*2:0] ball_distance_squared = dX * dX + dY * dY;
 wire on_ball = BALL_RADIUS_SQUARED > ball_distance_squared;
 
 
@@ -155,12 +138,15 @@ assign vga_b = visible_area ? rgb12[ 3:0] : 0;
 localparam BACKGROUND_COLOR = 12'h000;
 // Final RGB
 always @(posedge pixel_clock) begin
-  casez({on_ball, on_paddle,on_playarea})
+  casez({on_ball, on_paddle, on_playarea})
     'b1??:   rgb12 <= BALL_COLOR;
     'b?1?:   rgb12 <= PADDLE_COLOR;
     'b??0:   rgb12 <= BORDER_COLOR;
     default: rgb12 <= BACKGROUND_COLOR;
   endcase
 end
+
+//DEBUG
+assign leds[7:0] = paddle_y[7:0];
 
 endmodule

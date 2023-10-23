@@ -26,6 +26,12 @@ Spartan 3an development board for now, also have a zedboard with a Zynq
   - [X] Display logic given size and position
   - [*CURRENT*] Factor paddle and ball into own modules
   - [*CURRENT*] Factor rect/circle drawing into own modules
+    - [o] - Paddle
+        - [X] Logic
+        - [ ] Display
+    - [ ] - Ball
+        - [ ] Logic
+        - [ ] Display
   - [ ] Change to signed positions for entities?
     - Allows for easier signed arithmatic for collision and other formulae
     - OR factor abs-difference into component
