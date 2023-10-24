@@ -2,7 +2,7 @@
 `default_nettype none
 
 //TODO Move to own file, add header guards and includes as needed?
-`define POSITION_WIDTH 16
+`define POSITION_WIDTH 11
 
 `define VGA_INDIVIDUAL_COLOR_WIDTH 4
 `define VGA_COLOR_CHANNELS 3
@@ -79,21 +79,21 @@ localparam PADDLE_LENGTH = `POSITION_WIDTH'd200;
 localparam PADDLE_WIDTH  = `POSITION_WIDTH'd 20;
 wire [`POSITION_WIDTH-1:0] paddle_x, paddle_y;
 paddle#(
-   .PADDLE_LENGTH(PADDLE_LENGTH)
-  ,.PADDLE_WIDTH(PADDLE_WIDTH)
-  ,.PADDLE_SPEED(`POSITION_WIDTH'd10)
-  ,.PADDLE_START_X(`POSITION_WIDTH'd110)
-  ,.PADDLE_START_Y(`POSITION_WIDTH'd110)
-  ,.PADDLE_Y_MIN(BORDER_WIDTH)
-  ,.PADDLE_Y_MAX(GRAPHICS_HEIGHT-BORDER_WIDTH)
+   .LENGTH(PADDLE_LENGTH)
+  ,.WIDTH(PADDLE_WIDTH)
+  ,.SPEED(`POSITION_WIDTH'd10)
+  ,.START_X(`POSITION_WIDTH'd110)
+  ,.START_Y(`POSITION_WIDTH'd110)
+  ,.Y_MIN(BORDER_WIDTH)
+  ,.Y_MAX(GRAPHICS_HEIGHT-BORDER_WIDTH)
 ) paddle (
    .pixel_clock(pixel_clock)
   ,.vertical_sync(vga_vertical_sync)
   ,.move_forward(button_north)
   ,.move_backward(button_south)
 
-  ,.paddle_x(paddle_x)
-  ,.paddle_y(paddle_y)
+  ,.x(paddle_x)
+  ,.y(paddle_y)
 );
 
 wire on_paddle;
