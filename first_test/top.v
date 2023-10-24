@@ -5,13 +5,13 @@
 `define POSITION_WIDTH 11
 
 `define VGA_INDIVIDUAL_COLOR_WIDTH 4
-`define VGA_COLOR_CHANNELS 3
+`define VGA_COLOR_CHANNELS         3
 //`define COLOR_WIDTH (`VGA_INDIVIDUAL_COLOR_WIDTH * `VGA_COLOR_CHANNELS)
 `define COLOR_WIDTH 12
 
 `define RED_BITS   11:8
-`define GREEN_BITS 7:4
-`define BLUE_BITS  3:0
+`define GREEN_BITS  7:4
+`define BLUE_BITS   3:0
 
 `include "vga.v"
 `include "aabb_collision.v"
@@ -40,7 +40,7 @@ wire [`POSITION_WIDTH-1:0] v_position;
 wire pixel_clock;
 
 vga#(
-   .WIDTH(GRAPHICS_WIDTH)
+   .WIDTH (GRAPHICS_WIDTH)
   ,.HEIGHT(GRAPHICS_HEIGHT)
 //  ,.REFRESH_RATE(GRAPHICS_REFRESH_RATE)
 ) vga_inst (
@@ -58,8 +58,8 @@ vga#(
 
 // GAME!
 // Border
-localparam BORDER_WIDTH = `POSITION_WIDTH'd50;
-localparam BORDER_COLOR = `COLOR_WIDTH'h303;
+localparam BORDER_WIDTH = `POSITION_WIDTH'd  50;
+localparam BORDER_COLOR = `COLOR_WIDTH   'h 303;
 wire on_playarea;
 aabb_collision border_aabb_col (
    .bb1_x1(h_position), .bb1_y1(v_position)
@@ -74,22 +74,22 @@ aabb_collision border_aabb_col (
 
 
 // Paddle
-localparam PADDLE_COLOR = `COLOR_WIDTH'hfff;
-localparam PADDLE_LENGTH = `POSITION_WIDTH'd200;
-localparam PADDLE_WIDTH  = `POSITION_WIDTH'd 20;
+localparam PADDLE_COLOR =  `COLOR_WIDTH   'h fff;
+localparam PADDLE_LENGTH = `POSITION_WIDTH'd 200;
+localparam PADDLE_WIDTH  = `POSITION_WIDTH'd  20;
 wire [`POSITION_WIDTH-1:0] paddle_x, paddle_y;
 paddle#(
-   .LENGTH(PADDLE_LENGTH)
-  ,.WIDTH(PADDLE_WIDTH)
-  ,.SPEED(`POSITION_WIDTH'd10)
-  ,.START_X(`POSITION_WIDTH'd110)
-  ,.START_Y(`POSITION_WIDTH'd110)
-  ,.Y_MIN(BORDER_WIDTH)
-  ,.Y_MAX(GRAPHICS_HEIGHT-BORDER_WIDTH)
+   .LENGTH (PADDLE_LENGTH)
+  ,.WIDTH  (PADDLE_WIDTH)
+  ,.SPEED  (`POSITION_WIDTH'd  10)
+  ,.START_X(`POSITION_WIDTH'd 110)
+  ,.START_Y(`POSITION_WIDTH'd 110)
+  ,.Y_MIN  (BORDER_WIDTH)
+  ,.Y_MAX  (GRAPHICS_HEIGHT - BORDER_WIDTH)
 ) paddle (
-   .pixel_clock(pixel_clock)
+   .pixel_clock  (pixel_clock)
   ,.vertical_sync(vga_vertical_sync)
-  ,.move_forward(button_north)
+  ,.move_forward (button_north)
   ,.move_backward(button_south)
 
   ,.x(paddle_x)
@@ -109,11 +109,11 @@ aabb_collision paddle_aabb_col (
 
 
 //Ball
-localparam BALL_RADIUS = `POSITION_WIDTH'd 10;
+localparam BALL_RADIUS         = `POSITION_WIDTH'd 10;
 localparam BALL_RADIUS_SQUARED = BALL_RADIUS*BALL_RADIUS;
-localparam BALL_START_X = GRAPHICS_WIDTH /`POSITION_WIDTH'd 2;
-localparam BALL_START_Y = GRAPHICS_HEIGHT/`POSITION_WIDTH'd 2;
-localparam BALL_COLOR = `COLOR_WIDTH'hfff;
+localparam BALL_START_X        = GRAPHICS_WIDTH /`POSITION_WIDTH'd 2;
+localparam BALL_START_Y        = GRAPHICS_HEIGHT/`POSITION_WIDTH'd 2;
+localparam BALL_COLOR          = `COLOR_WIDTH'h fff;
 
 reg [`POSITION_WIDTH-1:0] ball_x = BALL_START_X;
 reg [`POSITION_WIDTH-1:0] ball_y = BALL_START_Y;
@@ -124,7 +124,7 @@ wire is_pos_dy = ball_y < v_position;
 wire [`POSITION_WIDTH-1:0] dX = is_pos_dx ? h_position - ball_x : ball_x - h_position;
 wire [`POSITION_WIDTH-1:0] dY = is_pos_dy ? v_position - ball_y : ball_y - v_position;
 
-wire [(`POSITION_WIDTH*2)-1:0] ball_distance_squared = dX * dX + dY * dY;
+wire [(`POSITION_WIDTH * 2)-1:0] ball_distance_squared = dX * dX + dY * dY;
 wire on_ball = BALL_RADIUS_SQUARED > ball_distance_squared;
 
 
@@ -133,11 +133,11 @@ wire on_ball = BALL_RADIUS_SQUARED > ball_distance_squared;
 reg [`COLOR_WIDTH-1:0] rgb12;
 
 // Active Area Blanking
-assign vga_r = visible_area ? rgb12[`RED_BITS  ] : 0;
-assign vga_g = visible_area ? rgb12[`GREEN_BITS] : 0;
-assign vga_b = visible_area ? rgb12[`BLUE_BITS ] : 0;
+assign vga_r = visible_area ? rgb12[`RED_BITS  ] : `VGA_INDIVIDUAL_COLOR_WIDTH'h 0;
+assign vga_g = visible_area ? rgb12[`GREEN_BITS] : `VGA_INDIVIDUAL_COLOR_WIDTH'h 0;
+assign vga_b = visible_area ? rgb12[`BLUE_BITS ] : `VGA_INDIVIDUAL_COLOR_WIDTH'h 0;
 
-localparam BACKGROUND_COLOR = `COLOR_WIDTH'h000;
+localparam BACKGROUND_COLOR = `COLOR_WIDTH'h 000;
 // Final RGB
 always @(posedge pixel_clock) begin
   casez({on_ball, on_paddle, on_playarea})
