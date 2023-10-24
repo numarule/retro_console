@@ -1,27 +1,23 @@
 module vga_sync#(
-   parameter H_VISIBLE_AREA = 640
-  ,parameter H_FRONT_PORCH  =  16
-  ,parameter H_SYNC_WIDTH   =  96
-  ,parameter H_BACK_PORCH   =  48
+   parameter H_VISIBLE_AREA = `POSITION_WIDTH'd 640
+  ,parameter H_FRONT_PORCH  = `POSITION_WIDTH'd  16
+  ,parameter H_SYNC_WIDTH   = `POSITION_WIDTH'd  96
+  ,parameter H_BACK_PORCH   = `POSITION_WIDTH'd  48
   ,parameter H_ACTIVE_POLARITY = 1'b0
 
-  ,parameter V_VISIBLE_AREA = 480
-  ,parameter V_FRONT_PORCH  =  10
-  ,parameter V_SYNC_WIDTH   =  2
-  ,parameter V_BACK_PORCH   =  33
+  ,parameter V_VISIBLE_AREA = `POSITION_WIDTH'd 480
+  ,parameter V_FRONT_PORCH  = `POSITION_WIDTH'd  10
+  ,parameter V_SYNC_WIDTH   = `POSITION_WIDTH'd   2
+  ,parameter V_BACK_PORCH   = `POSITION_WIDTH'd  33
   ,parameter V_ACTIVE_POLARITY = 1'b0
-
-  //TODO log2(ceil(VISIBLE_AREA))
-  ,parameter H_REG_MAX = 11
-  ,parameter V_REG_MAX = 11
 ) (
    input pixel_clock
 
   ,output reg vga_horizontal_sync
   ,output reg vga_vertical_sync
 
-  ,output reg [H_REG_MAX:0] h_position
-  ,output reg [V_REG_MAX:0] v_position
+  ,output reg [`POSITION_WIDTH-1:0] h_position
+  ,output reg [`POSITION_WIDTH-1:0] v_position
 
   ,output visible_area
 );
@@ -33,12 +29,12 @@ localparam V_SYNC_END   = V_SYNC_START   + V_SYNC_WIDTH;
 
 localparam H_TOTAL = H_VISIBLE_AREA + H_FRONT_PORCH + H_SYNC_WIDTH + H_BACK_PORCH;
 localparam V_TOTAL = V_VISIBLE_AREA + V_FRONT_PORCH + V_SYNC_WIDTH + V_BACK_PORCH;
-localparam H_MAX = H_TOTAL - 1;
-localparam V_MAX = V_TOTAL - 1;
+localparam H_MAX = H_TOTAL - `POSITION_WIDTH'd1;
+localparam V_MAX = V_TOTAL - `POSITION_WIDTH'd1;
 
 // H
 wire h_reset = h_position >= H_MAX;
-always @(posedge pixel_clock) h_position <= h_reset ? 0 : h_position + 1;
+always @(posedge pixel_clock) h_position <= h_reset ? `POSITION_WIDTH'd0 : h_position + `POSITION_WIDTH'd1;
 
 wire h_sync = h_position >= H_SYNC_START && h_position < H_SYNC_END;
 //OPT Could this ternary be some binary operation of h_sync and H_ACTIVE_POLARITY?
@@ -50,9 +46,9 @@ wire v_reset = v_position >= V_MAX;
 
 always @(posedge pixel_clock) begin
   casez({h_at_max, v_reset})
-    2'b?1: v_position = 0;
-    2'b00: v_position = v_position; //NOP
-    2'b10: v_position = v_position + 1;
+    'b?1: v_position = `POSITION_WIDTH'd0;
+    'b00: v_position = v_position; //NOP
+    'b10: v_position = v_position + `POSITION_WIDTH'd1;
   endcase
 end
 

@@ -27,10 +27,8 @@
 // 800          - pos       - 3           - 6    - 22         - 831
 
 module vga#(
-   parameter WIDTH  = 1280
-  ,parameter HEIGHT = 800
-  //TODO Replace with log2(ceil(TOTAL))
-  ,parameter POSITION_REG_MAX = 11
+   parameter WIDTH  = `POSITION_WIDTH'd1280
+  ,parameter HEIGHT = `POSITION_WIDTH'd 800
 //  ,parameter REFRESH_RATE = 60
 ) (
    input clk_50m
@@ -39,8 +37,8 @@ module vga#(
   ,output vga_horizontal_sync
   ,output vga_vertical_sync
 
-  ,output [POSITION_REG_MAX:0] h_position
-  ,output [POSITION_REG_MAX:0] v_position
+  ,output [`POSITION_WIDTH-1:0] h_position
+  ,output [`POSITION_WIDTH-1:0] v_position
 
   ,output visible_area
   //TODO
@@ -56,25 +54,22 @@ DCM_SP #(
 ) DCM_SP_inst (
    .CLKIN(clk_50m)
   ,.CLKFX(pixel_clock)
-  ,.RST(0)
+  ,.RST(1'b0)
 );
 
 //TODO Calculate, or lookup timing values according to settings
 vga_sync #(
    .H_VISIBLE_AREA(WIDTH)
-  ,.H_FRONT_PORCH(72)
-  ,.H_SYNC_WIDTH(128)
-  ,.H_BACK_PORCH(200)
+  ,.H_FRONT_PORCH(`POSITION_WIDTH'd 72)
+  ,.H_SYNC_WIDTH(`POSITION_WIDTH'd 128)
+  ,.H_BACK_PORCH(`POSITION_WIDTH'd 200)
   ,.H_ACTIVE_POLARITY(1'b0)
 
   ,.V_VISIBLE_AREA(HEIGHT)
-  ,.V_FRONT_PORCH(3)
-  ,.V_SYNC_WIDTH(6)
-  ,.V_BACK_PORCH(22)
+  ,.V_FRONT_PORCH(`POSITION_WIDTH'd 3)
+  ,.V_SYNC_WIDTH(`POSITION_WIDTH'd 6)
+  ,.V_BACK_PORCH(`POSITION_WIDTH'd 22)
   ,.V_ACTIVE_POLARITY(1'b1)
-
-  ,.H_REG_MAX(POSITION_REG_MAX)
-  ,.V_REG_MAX(POSITION_REG_MAX)
 ) vga_sync_inst (
    .pixel_clock(pixel_clock)
 
